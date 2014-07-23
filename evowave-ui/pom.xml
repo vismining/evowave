@@ -7,21 +7,45 @@
 
   <groupId>br.magnavita.evowave</groupId>
   <artifactId>evowave-ui</artifactId>
-  <version>3.0.0-SNAPSHOT</version>
+  <version>1.0.0-SNAPSHOT</version>
   <packaging>war</packaging>
 
   <name>EVOWAVE: An open-source software evolution visualization</name>
   <description></description>
 
   <properties>
+    
     <js.libs.angular.version>1.2.20</js.libs.angular.version>
+    <js.libs.angular-ui.version>0.11.0</js.libs.angular-ui.version>
+
+    <css.libs.bootstrap.version>3.2.0</css.libs.bootstrap.version>
+    
     <js.libs.angular.core.path>src/main/js/libs/angular-${js.libs.angular.version}/</js.libs.angular.core.path>
     <js.libs.angular.core.libname>angular.js</js.libs.angular.core.libname>
-    
-    <env.serverapp.deploy.path>C:\Program Files\apache-tomcat-7.0.27\webapps\</env.serverapp.deploy.path>
+
+    <js.libs.angular.route.path>src/main/js/libs/angular-${js.libs.angular.version}/</js.libs.angular.route.path>
+    <js.libs.angular.route.libname>angular-route.js</js.libs.angular.route.libname>
+
+    <js.libs.angular-ui.path>src/main/js/libs/angular-ui-${js.libs.angular-ui.version}/</js.libs.angular-ui.path>
+    <js.libs.angular-ui.libname>ui-bootstrap.js</js.libs.angular-ui.libname>
+
+    <css.libs.bootstrap.path>src/main/css/libs/bootstrap-${css.libs.bootstrap.version}/</css.libs.bootstrap.path>
+    <css.libs.bootstrap.libname>bootstrap.css</css.libs.bootstrap.libname>
+
+    <js.libs.processingjs.version>1.4.8</js.libs.processingjs.version>
+    <js.libs.processingjs.path>src/main/js/libs/processingjs-${js.libs.processingjs.version}/</js.libs.processingjs.path>
+    <js.libs.processingjs.libname>processing.js</js.libs.processingjs.libname>
+
+    <js.angular.modules>src/main/js/modules/</js.angular.modules>
 
     <html.pages.path>src/main/html/</html.pages.path>
-    <js.angular.modules>src/main/js/modules/</js.angular.modules>
+
+    <test.js.angular.modules>src/test/js/modules/</test.js.angular.modules>
+
+    <test.html.pages.path>src/test/html/</test.html.pages.path>
+
+    <env.serverapp.deploy.path>C:\Program Files\apache-tomcat-7.0.27\webapps\</env.serverapp.deploy.path>
+
   </properties>
 
   <build>
@@ -45,10 +69,29 @@
               </includes>
             </resource>
 
+            <!-- HTML Test Pages -->
+            <resource>
+              <targetPath>/test/</targetPath>
+              <directory>${test.html.pages.path}</directory>
+              <filtering>true</filtering>
+              <includes>
+                <include>**/*.html</include>
+              </includes>
+            </resource>
+
             <!-- AngularJS Modules -->
             <resource>
               <targetPath>js/modules/</targetPath>
               <directory>${js.angular.modules}</directory>
+              <includes>
+                <include>**/*.js</include>
+              </includes>
+            </resource>
+
+            <!-- AngularJS Test Modules -->
+            <resource>
+              <targetPath>js/test/modules/</targetPath>
+              <directory>${test.js.angular.modules}</directory>
               <includes>
                 <include>**/*.js</include>
               </includes>
@@ -60,6 +103,42 @@
               <directory>${js.libs.angular.core.path}</directory>
               <includes>
                 <include>${js.libs.angular.core.libname}</include>
+              </includes>
+            </resource>
+
+            <!-- AngularJS Route Library -->
+            <resource>
+              <targetPath>js/libs/</targetPath>
+              <directory>${js.libs.angular.route.path}</directory>
+              <includes>
+                <include>${js.libs.angular.route.libname}</include>
+              </includes>
+            </resource>
+
+            <!-- AngularJS UI Library -->
+            <resource>
+              <targetPath>js/libs/</targetPath>
+              <directory>${js.libs.angular-ui.path}</directory>
+              <includes>
+                <include>${js.libs.angular-ui.libname}</include>
+              </includes>
+            </resource>
+
+            <!-- Bootstrap CSS Library -->
+            <resource>
+              <targetPath>css/libs/</targetPath>
+              <directory>${css.libs.bootstrap.path}</directory>
+              <includes>
+                <include>${css.libs.bootstrap.libname}</include>
+              </includes>
+            </resource>
+
+            <!-- ProcessingJS Library -->
+            <resource>
+              <targetPath>js/libs/</targetPath>
+              <directory>${js.libs.processingjs.path}</directory>
+              <includes>
+                <include>${js.libs.processingjs.libname}</include>
               </includes>
             </resource>
 
