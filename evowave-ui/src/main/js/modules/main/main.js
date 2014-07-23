@@ -1,1 +1,1 @@
-angular.module('evowave-main', []);
+angular.module('evowave-main', ['vismining-evowave']);
