@@ -81,22 +81,6 @@ angular.module( 'vismining-evowave', [] )
 	
 				var sector = this.data.sectors[sectorId];
 
-			
-				
-				var startAngle = 0;
-				var endAngle = (Math.PI * 2);
-
-				var angle = startAngle;
-				
-				angular.forEach(this.data.sectors, function(_sector, _sectorId){
-					if(sectorId === _sectorId) {
-						_sector.startAngle = angle;
-						_sector.endAngle = angle + ((endAngle-startAngle) * _sector.angle);
-						return false;
-					}
-					angle += ((endAngle-startAngle) * _sector.angle);
-				}, this);
-
 				this.cleanSector(sectorId);
 
 				this.stroke(this.unhex(this.colors.sectorlines));
@@ -176,8 +160,35 @@ angular.module( 'vismining-evowave', [] )
 
 			this.reset = function() {
 
-				this.biggestRadius = (this.data._window.amount * this.data._window.size) + 12;
-				this.smallestRadius = this.biggestRadius * 0.1;
+				var sectorWithSmallestAngle;
+				var previousSector;
+
+				angular.forEach(this.data.sectors, function(sector, sectorId) {
+
+					var startAngle = 0;
+					var endAngle = (Math.PI * 2);
+
+					sector.startAngle = (previousSector === undefined) ? startAngle : previousSector.endAngle;
+					sector.endAngle = sector.startAngle + ((endAngle-startAngle) * sector.angle);
+
+					previousSector = sector;
+
+					if(sectorWithSmallestAngle === undefined){
+						sectorWithSmallestAngle = sector;
+					} else if(sectorWithSmallestAngle.angle > sector.angle){
+						sectorWithSmallestAngle = sector;
+					}
+
+				}, this);
+
+				this.smallestRadius = 0;
+
+				do {
+					this.smallestRadius++;
+					var offset = Math.atan( (this.data._window.size-2) / this.smallestRadius);
+				} while((sectorWithSmallestAngle.startAngle + offset) > (sectorWithSmallestAngle.endAngle - offset));
+
+				this.biggestRadius = (this.data._window.amount * this.data._window.size) + 8;					
 
 				this.clean();
 				
@@ -227,7 +238,7 @@ angular.module( 'vismining-evowave', [] )
 				$canvas = $element.find('canvas');
 
 				evowave.data = $scope.data;
-				evowave.data = { _window: { size: 6, amount: 70 }, sectors: { sector5: { angle: 0.15 }, sector6: { angle: 0.35 }, sector3: { angle: 0.25 }, sector4: { angle: 0.05 }, sector2: { angle: 0.15 }, sector1: { angle: 0.05 } } };
+				evowave.data = { _window: { size: 6, amount: 150 }, sectors: { sector5: { angle: 0.15 }, sector6: { angle: 0.35 }, sector3: { angle: 0.25 }, sector4: { angle: 0.05 }, sector2: { angle: 0.15 }, sector1: { angle: 0.05 } } };
 
 				var size = parseInt(attrs.size);
 
