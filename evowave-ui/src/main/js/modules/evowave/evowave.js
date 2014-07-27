@@ -2,7 +2,7 @@ angular.module( 'vismining-evowave', [] )
 
 	.run(['$templateCache', function($templateCache) {
 		$templateCache.put("template/vismining/evowave.html",
-			"<canvas />"
+			"<canvas style='border: 1px dashed #FFFFFF; padding:4px; background-color: #E4E4E4' />"
 		);
 	}])
 
@@ -27,7 +27,7 @@ angular.module( 'vismining-evowave', [] )
 			this.colors = {
 				background: 'FFFFFFFF',
 				sector_odd: 'FFF4F4F4',
-				sector_even:'FFF9F9F9',
+				sector_even:'FFEFEFEF',
 				guidelines: 'FF5796FD',
 				messages: 	'FF999999',
 				sectorlines:'FFFFFFFF'
@@ -37,7 +37,7 @@ angular.module( 'vismining-evowave', [] )
 				delete gc.draw;
 				
 				angular.extend(this, gc);
-				
+
 				this.reset();	
 				this.draw();
 
@@ -57,9 +57,9 @@ angular.module( 'vismining-evowave', [] )
 				} else {
 					angular.forEach(this.dirty, function(sector, sectorId) {
 						if(Object.keys(sector) > 0) {
-							angular.forEach(sector, function(w, windowId) {
-								if(Object.keys(w) > 0){
-									angular.forEach(w, function(molecule, moleculeId) {
+							angular.forEach(sector, function(_window, windowId) {
+								if(Object.keys(_window) > 0){
+									angular.forEach(_window, function(molecule, moleculeId) {
 										this.drawMolecule(sectorId, windowId, moleculeId);
 									}, this);
 								} else {
@@ -112,7 +112,18 @@ angular.module( 'vismining-evowave', [] )
 									(this.width/2) + (this.biggestRadius * this.cos(sector.endAngle)), 
 									(this.width/2) + (this.biggestRadius * this.sin(sector.endAngle)));
 
-				angular.forEach(sector.windows, function(w, windowId){
+				console.log("$: " + (this.biggestRadius) + ", "+ (this.smallestRadius));
+
+				for(var w = this.smallestRadius; w < (this.data._window.amount*this.data._window.size); w += this.data._window.size){
+					var startAngle = sector.startAngle + (Math.atan( 4 / w ));
+					var endAngle = sector.endAngle - (Math.atan( 4 / w ));
+
+					this.fill(255);
+					this.stroke(255);
+					this.fillSector(startAngle, endAngle, (w+this.data._window.size)-2, w+2);
+				}
+
+				angular.forEach(sector.windows, function(_window, windowId){
 					this.drawWindow(sectorId, windowId);
 				}, this);
 
@@ -130,6 +141,11 @@ angular.module( 'vismining-evowave', [] )
 
 				this.fill(this.unhex(sector.background));
 				this.stroke(this.unhex(sector.background));
+
+				var r = Math.random() * 255, g =  Math.random() * 255, b =  Math.random() * 255;
+
+				//this.fill(r, g, b);
+				//this.stroke(r, g, b);
 
 				this.fillSector(sector.startAngle, sector.endAngle, this.biggestRadius, this.smallestRadius);
 
@@ -160,7 +176,7 @@ angular.module( 'vismining-evowave', [] )
 
 			this.reset = function() {
 
-				this.biggestRadius = (this.width/2) - 1;
+				this.biggestRadius = (this.data._window.amount * this.data._window.size) + 12;
 				this.smallestRadius = this.biggestRadius * 0.1;
 
 				this.clean();
@@ -185,8 +201,6 @@ angular.module( 'vismining-evowave', [] )
 					this.stroke(this.unhex(this.colors.guidelines));
 					this.strokeWeight(1);
 					this.arc((this.width/2), (this.width/2), (this.smallestRadius*2), (this.smallestRadius*2), 0, Math.PI * 2);
-
-					this.smallestRadius += 1;
 				}
 
 				this.biggestRadius -= 4;
@@ -212,20 +226,20 @@ angular.module( 'vismining-evowave', [] )
 			link: function($scope, $element, attrs) {
 				$canvas = $element.find('canvas');
 
-				$canvas.attr('width', attrs.width);	
-				$element.removeAttr('width');
-
-				$canvas.attr('height', attrs.height);
-				$element.removeAttr('height');
-
 				evowave.data = $scope.data;
-				evowave.data = { sectors: { sector5: { angle: 0.15 }, sector6: { angle: 0.35 }, sector3: { angle: 0.25 }, sector4: { angle: 0.05 }, sector2: { angle: 0.15 }, sector1: { angle: 0.05 } } };
+				evowave.data = { _window: { size: 6, amount: 70 }, sectors: { sector5: { angle: 0.15 }, sector6: { angle: 0.35 }, sector3: { angle: 0.25 }, sector4: { angle: 0.05 }, sector2: { angle: 0.15 }, sector1: { angle: 0.05 } } };
+
+				var size = parseInt(attrs.size);
 
 				new Processing($canvas[0], function(processing) {
 					var ProcessingAPIContext = processing; // TODO: Create a context wrapper object for processing
 
 					processing.setup = function() {
-						processing.size(parseInt($canvas.attr('width')), parseInt($canvas.attr('height')));
+						/*if(evowave.data){
+							size = parseInt(parseInt(attrs.size)-(((((parseInt(attrs.size)/2)-10)-((((parseInt(attrs.size)/2) - 1) * 0.1)+11)) % evowave.data._window.size)*2));
+						}*/
+
+						processing.size(size, size);
 				  		evowave.init(ProcessingAPIContext);
 				  		processing.noLoop();
 					};
