@@ -2,7 +2,7 @@ angular.module( 'vismining-evowave', [] )
 
 	.run(['$templateCache', function($templateCache) {
 		$templateCache.put("template/vismining/evowave.html",
-			"<canvas style='border: 1px dashed #FFFFFF; padding:4px; background-color: #E4E4E4; outline: none; -webkit-tap-highlight-color: rgba(255, 255, 255, 0);' />"
+			"<canvas style='border: 1px dashed #CCCCCC; padding:4px; background-color: #CCCCCC; outline: none; -webkit-tap-highlight-color: rgba(255, 255, 255, 0);' />"
 		);
 	}])
 
@@ -132,19 +132,19 @@ angular.module( 'vismining-evowave', [] )
 				this.buffer.stroke(this.buffer.unhex(this.colors.sectorlines));
 				this.buffer.strokeWeight(2);
 
-				this.buffer.line(	(this.buffer.width/2) + (this.smallestRadius * this.buffer.cos(sector.startAngle)), 
-									(this.buffer.width/2) + (this.smallestRadius * this.buffer.sin(sector.startAngle)),
-									(this.buffer.width/2) + (this.biggestRadius * this.buffer.cos(sector.startAngle)), 
-									(this.buffer.width/2) + (this.biggestRadius * this.buffer.sin(sector.startAngle)));
+				this.buffer.line(	(this.center.x) + (this.smallestRadius * this.buffer.cos(sector.startAngle)), 
+									(this.center.y) + (this.smallestRadius * this.buffer.sin(sector.startAngle)),
+									(this.center.x) + (this.biggestRadius * this.buffer.cos(sector.startAngle)), 
+									(this.center.y) + (this.biggestRadius * this.buffer.sin(sector.startAngle)));
 
-				this.buffer.line(	(this.buffer.width/2) + (this.smallestRadius * this.buffer.cos(sector.endAngle)), 
-									(this.buffer.width/2) + (this.smallestRadius * this.buffer.sin(sector.endAngle)),
-									(this.buffer.width/2) + (this.biggestRadius * this.buffer.cos(sector.endAngle)), 
-									(this.buffer.width/2) + (this.biggestRadius * this.buffer.sin(sector.endAngle)));
+				this.buffer.line(	(this.center.x) + (this.smallestRadius * this.buffer.cos(sector.endAngle)), 
+									(this.center.y) + (this.smallestRadius * this.buffer.sin(sector.endAngle)),
+									(this.center.x) + (this.biggestRadius * this.buffer.cos(sector.endAngle)), 
+									(this.center.y) + (this.biggestRadius * this.buffer.sin(sector.endAngle)));
 
 				for(var w = this.smallestRadius; w < (this.data._window.amount*this.data._window.size); w += this.data._window.size){
-					var startAngle = sector.startAngle + (Math.atan( 4 / w ));
-					var endAngle = sector.endAngle - (Math.atan( 4 / w ));
+					var startAngle = sector.startAngle + (Math.atan( this.data._window.size / w )/2);
+					var endAngle = sector.endAngle - (Math.atan( this.data._window.size / w )/2);
 
 					this.buffer.fill(255);
 					this.buffer.stroke(255);
@@ -185,10 +185,10 @@ angular.module( 'vismining-evowave', [] )
 				while(angle <= endAngle){
 					var nextAngle = Math.min(endAngle, angle + (Math.PI/180));
 					this.buffer.beginShape();
-						this.buffer.vertex((this.buffer.width/2) + (biggestRadius * this.buffer.cos(angle)), (this.buffer.width/2) + (biggestRadius * this.buffer.sin(angle)));
-						this.buffer.vertex((this.buffer.width/2) + (biggestRadius * this.buffer.cos(nextAngle)), (this.buffer.width/2) + (biggestRadius * this.buffer.sin(nextAngle)));
-						this.buffer.vertex((this.buffer.width/2) + (smallestRadius * this.buffer.cos(nextAngle)), (this.buffer.width/2) + (smallestRadius * this.buffer.sin(nextAngle)));
-						this.buffer.vertex((this.buffer.width/2) + (smallestRadius * this.buffer.cos(angle)), (this.buffer.width/2) + (smallestRadius * this.buffer.sin(angle)));
+						this.buffer.vertex((this.center.x) + (biggestRadius * this.buffer.cos(angle)), (this.center.y) + (biggestRadius * this.buffer.sin(angle)));
+						this.buffer.vertex((this.center.x) + (biggestRadius * this.buffer.cos(nextAngle)), (this.center.y) + (biggestRadius * this.buffer.sin(nextAngle)));
+						this.buffer.vertex((this.center.x) + (smallestRadius * this.buffer.cos(nextAngle)), (this.center.y) + (smallestRadius * this.buffer.sin(nextAngle)));
+						this.buffer.vertex((this.center.x) + (smallestRadius * this.buffer.cos(angle)), (this.center.y) + (smallestRadius * this.buffer.sin(angle)));
 					this.buffer.endShape(2);
 					angle += (Math.PI/180);
 				}
@@ -213,11 +213,45 @@ angular.module( 'vismining-evowave', [] )
 			};
 
 			this.drawWindow = function(sectorId, windowId) {
+				var sector = this.data.sectors[sectorId];
+				var _window = sector.windows[windowId];
+				if(_window.offset === undefined){
+					_window.offset = Math.atan((this.data._window.size-1) / ((_window.position * this.data._window.size) + this.smallestRadius));
+				}
+
+				var startAngle = sector.startAngle;
+				var endAngle = sector.endAngle - (_window.offset);
+
+				if(_window.molecules !== undefined && (endAngle - startAngle) > (Object.keys(_window.molecules).length * _window.offset)) {
+
+					var moleculeCounter = 0;
+					angular.forEach(_window.molecules, function(molecule, moleculeId) {
+						moleculeCounter++;
+						molecule.position = {
+							x: this.center.x + ((((_window.position * this.data._window.size) + this.smallestRadius) - this.data._window.size/2) * this.cos(startAngle + (_window.offset * moleculeCounter))),
+							y: this.center.y + ((((_window.position * this.data._window.size) + this.smallestRadius) - this.data._window.size/2) * this.sin(startAngle + (_window.offset * moleculeCounter)))
+						};
+						this.drawMolecule(sectorId, windowId, moleculeId);
+					}, this);
+
+				} else {
+
+				}
 
 			};
 
 			this.drawMolecule = function(sectorId, windowId, moleculeId) {
+				var sector = this.data.sectors[sectorId];
+				var _window = sector.windows[windowId];
+				var molecule = _window.molecules[moleculeId];
 
+				this.buffer.fill(255);
+				this.buffer.stroke(0);
+				this.buffer.strokeWeight(2);
+				this.buffer.ellipse(	molecule.position.x,
+										molecule.position.y,
+										this.data._window.size-5, 
+										this.data._window.size-5);
 			};
 
 			this.reset = function() {
@@ -232,19 +266,19 @@ angular.module( 'vismining-evowave', [] )
 					this.buffer.noFill();
 					this.buffer.stroke(this.buffer.unhex(this.colors.guidelines));
 					this.buffer.strokeWeight(1);
-					this.buffer.arc((this.buffer.width/2), (this.buffer.width/2), (this.biggestRadius*2),  (this.biggestRadius*2), 0, Math.PI * 2);
+					this.buffer.arc((this.center.x), (this.center.y), (this.biggestRadius*2),  (this.biggestRadius*2), 0, Math.PI * 2);
 
 					this.biggestRadius -= 3;
 
 					this.buffer.noFill();
 					this.buffer.stroke(this.buffer.unhex(this.colors.guidelines));
 					this.buffer.strokeWeight(1);
-					this.buffer.arc((this.buffer.width/2), (this.buffer.width/2), (this.biggestRadius*2),  (this.biggestRadius*2), 0, Math.PI * 2);
+					this.buffer.arc((this.center.x), (this.center.y), (this.biggestRadius*2),  (this.biggestRadius*2), 0, Math.PI * 2);
 
 					this.buffer.noFill();
 					this.buffer.stroke(this.buffer.unhex(this.colors.guidelines));
 					this.buffer.strokeWeight(1);
-					this.buffer.arc((this.buffer.width/2), (this.buffer.width/2), (this.smallestRadius*2), (this.smallestRadius*2), 0, Math.PI * 2);
+					this.buffer.arc((this.center.x), (this.center.y), (this.smallestRadius*2), (this.smallestRadius*2), 0, Math.PI * 2);
 
 					this.biggestRadius -= 4;
 					this.smallestRadius += 4;
@@ -274,7 +308,7 @@ angular.module( 'vismining-evowave', [] )
 				var canvas = $canvas[0];
 
 				evowave.data = $scope.data;
-				evowave.data = { _window: { size: 6, amount: 100 }, sectors: { sector5: { angle: 0.15 }, sector6: { angle: 0.35 }, sector3: { angle: 0.25 }, sector4: { angle: 0.05 }, sector2: { angle: 0.15 }, sector1: { angle: 0.05 } } };
+				evowave.data = { _window: { size: 6, amount: 100 }, sectors: { sector5: { angle: 0.15, windows: { window0: { position: 5, molecules: {  molecule1: {}, molecule4: {}, molecule3: {}, molecule10: {}, molecule11: {}, molecule14: {}, molecule13: {}, molecule20: {}, molecule21: {}, molecule24: {}, molecule30: {}, molecule31: {} } }, window1: { position: 4, molecules: { molecule0: {}, molecule1: {}, molecule4: {}, molecule3: {} } } } }, sector6: { angle: 0.35 }, sector3: { angle: 0.25 }, sector4: { angle: 0.05 }, sector2: { angle: 0.15 }, sector1: { angle: 0.05 } } };
 
 				var size = parseInt(attrs.size);
 
