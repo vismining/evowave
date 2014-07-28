@@ -2,7 +2,7 @@ angular.module( 'vismining-evowave', [] )
 
 	.run(['$templateCache', function($templateCache) {
 		$templateCache.put("template/vismining/evowave.html",
-			"<canvas style='border: 1px dashed #CCCCCC; padding:4px; background-color: #CCCCCC; outline: none; -webkit-tap-highlight-color: rgba(255, 255, 255, 0);' />"
+			"<canvas style='border: 1px dashed #FFFFFF; padding:4px; background-color: #CCCCCC; outline: none; -webkit-tap-highlight-color: rgba(255, 255, 255, 0);' />"
 		);
 	}])
 
@@ -30,7 +30,8 @@ angular.module( 'vismining-evowave', [] )
 				sector_even:'FFEFEFEF',
 				guidelines: 'FF5796FD',
 				messages: 	'FFFFFFFF',
-				sectorlines:'FFFFFFFF'
+				sectorlines:'FFFFFFFF',
+				molecule: 	'FF333333'
 			};
 
 			this.init = function() {
@@ -56,14 +57,14 @@ angular.module( 'vismining-evowave', [] )
 
 				}, this);
 
-				this.smallestRadius = 0;
+				this.smallestRadius = this.data._window.size;
 
 				do {
 					this.smallestRadius++;
 					var offset = Math.atan( (this.data._window.size) / this.smallestRadius);
 				} while((sectorWithSmallestAngle.startAngle + offset) > (sectorWithSmallestAngle.endAngle - offset));
 
-				this.biggestRadius = (this.data._window.amount * this.data._window.size) + 8;
+				this.biggestRadius = this.smallestRadius + (this.data._window.amount * this.data._window.size) + 12;
 
 				this.buffer = this.createGraphics((this.biggestRadius+1)*2, (this.biggestRadius+1)*2, 1);
 
@@ -84,22 +85,6 @@ angular.module( 'vismining-evowave', [] )
 				if(this.dirty === undefined) {
 					angular.forEach(this.data.sectors, function(sector, sectorId) {
 						this.drawSector(sectorId);
-					}, this);
-				} else {
-					angular.forEach(this.dirty, function(sector, sectorId) {
-						if(Object.keys(sector) > 0) {
-							angular.forEach(sector, function(_window, windowId) {
-								if(Object.keys(_window) > 0){
-									angular.forEach(_window, function(molecule, moleculeId) {
-										this.drawMolecule(sectorId, windowId, moleculeId);
-									}, this);
-								} else {
-									this.drawWindow(sectorId, windowId);
-								}
-							}, this);
-						} else {
-							this.drawSector(sectorId);
-						}
 					}, this);
 				}
 
@@ -142,7 +127,7 @@ angular.module( 'vismining-evowave', [] )
 									(this.center.x) + (this.biggestRadius * this.buffer.cos(sector.endAngle)), 
 									(this.center.y) + (this.biggestRadius * this.buffer.sin(sector.endAngle)));
 
-				for(var w = this.smallestRadius; w < (this.data._window.amount*this.data._window.size); w += this.data._window.size){
+				for(var w = this.smallestRadius; w < this.smallestRadius + (this.data._window.amount*this.data._window.size); w += this.data._window.size){
 					var startAngle = sector.startAngle + (Math.atan( this.data._window.size / w )/2);
 					var endAngle = sector.endAngle - (Math.atan( this.data._window.size / w )/2);
 
@@ -161,7 +146,7 @@ angular.module( 'vismining-evowave', [] )
 
 				var sector = this.data.sectors[sectorId];
 
-				if((Object.keys(this.data.sectors).indexOf(sectorId) % 2) == 0){
+				if((sectorId % 2) == 0){
 					sector.background = this.colors.sector_odd;
 				} else {
 					sector.background = this.colors.sector_even;
@@ -195,15 +180,17 @@ angular.module( 'vismining-evowave', [] )
 			};
 
 			this.mouseDragged = function() {
-				this.externals.canvas.style.cursor = '-webkit-grabbing';
-				if(this.mouseTracker === undefined){
-					this.mouseTracker = {x: this.mouseX, y: this.mouseY};
-				} else {
-					this.center.x += this.mouseTracker.x - this.mouseX;
-					this.center.y += this.mouseTracker.y - this.mouseY;
-					this.draw();
-					this.mouseTracker.x = this.mouseX;
-					this.mouseTracker.y = this.mouseY;
+				if(this.mouseButton === 37) {
+					this.externals.canvas.style.cursor = '-webkit-grabbing';
+					if(this.mouseTracker === undefined){
+						this.mouseTracker = {x: this.mouseX, y: this.mouseY};
+					} else {
+						this.center.x += this.mouseTracker.x - this.mouseX;
+						this.center.y += this.mouseTracker.y - this.mouseY;
+						this.draw();
+						this.mouseTracker.x = this.mouseX;
+						this.mouseTracker.y = this.mouseY;
+					}
 				}
 			};
 
@@ -219,22 +206,63 @@ angular.module( 'vismining-evowave', [] )
 					_window.offset = Math.atan((this.data._window.size-1) / ((_window.position * this.data._window.size) + this.smallestRadius));
 				}
 
-				var startAngle = sector.startAngle;
+				var startAngle = sector.startAngle + (_window.offset);
 				var endAngle = sector.endAngle - (_window.offset);
+				
+				if(_window.molecules !== undefined && (endAngle - startAngle) > (_window.molecules.length * _window.offset)) {
 
-				if(_window.molecules !== undefined && (endAngle - startAngle) > (Object.keys(_window.molecules).length * _window.offset)) {
+					var moleculeIndex = 0;
 
-					var moleculeCounter = 0;
 					angular.forEach(_window.molecules, function(molecule, moleculeId) {
-						moleculeCounter++;
+
+						if( moleculeIndex == 0 ) {
+							angle = ( ( endAngle - startAngle ) / 2 );
+						} else if( moleculeIndex % 2 != 0) {
+							angle = ( ( endAngle - startAngle ) / 2 ) + ( ( ( moleculeIndex + 1 ) / 2 ) * ( _window.offset ) );
+						} else {
+							angle = ( ( endAngle - startAngle ) / 2 ) - ( ( moleculeIndex / 2 ) * ( _window.offset ) );
+						}
+
+						moleculeIndex++;
+
 						molecule.position = {
-							x: this.center.x + ((((_window.position * this.data._window.size) + this.smallestRadius) - this.data._window.size/2) * this.cos(startAngle + (_window.offset * moleculeCounter))),
-							y: this.center.y + ((((_window.position * this.data._window.size) + this.smallestRadius) - this.data._window.size/2) * this.sin(startAngle + (_window.offset * moleculeCounter)))
+							x: this.center.x + ((((_window.position * this.data._window.size) + this.smallestRadius) - this.data._window.size/2) * this.cos(startAngle + angle)),
+							y: this.center.y + ((((_window.position * this.data._window.size) + this.smallestRadius) - this.data._window.size/2) * this.sin(startAngle + angle))
 						};
+
 						this.drawMolecule(sectorId, windowId, moleculeId);
+
 					}, this);
 
 				} else {
+
+					angular.forEach(_window.molecules, function(molecule, moleculeId) {
+
+						if(molecule.color === undefined){
+							molecule.color = this.colors.molecule;
+						}
+
+						if(_window['_' + molecule.color] === undefined){
+							_window['_' + molecule.color] = [];
+						}
+
+						_window['_' + molecule.color].push(moleculeId);
+					}, this);
+
+					var _startAngle = startAngle;
+					
+					angular.forEach(_window, function(value, key) {
+						if(key.match('^_')){
+							this.buffer.fill(this.buffer.unhex(key.replace('_','')));
+							this.buffer.stroke(this.buffer.unhex(key.replace('_','')));
+							this.buffer.strokeWeight(1);
+
+							angle = (endAngle - startAngle) * (_window[key].length / _window.molecules.length);
+
+							this.fillSector(_startAngle, _startAngle + angle, (((_window.position * this.data._window.size) + this.smallestRadius - 3)), (((Math.max(0, _window.position-1) * this.data._window.size) + this.smallestRadius + 3)));
+							_startAngle += angle;
+						}
+					}, this);
 
 				}
 
@@ -245,9 +273,19 @@ angular.module( 'vismining-evowave', [] )
 				var _window = sector.windows[windowId];
 				var molecule = _window.molecules[moleculeId];
 
-				this.buffer.fill(255);
-				this.buffer.stroke(0);
+				if(molecule.color === undefined){
+					molecule.color = this.colors.molecule;
+				}
+
+				this.buffer.fill(this.buffer.unhex(molecule.color));
+				this.buffer.stroke(this.buffer.unhex(molecule.color));
 				this.buffer.strokeWeight(2);
+
+				var r = Math.random() * 255, g =  Math.random() * 255, b =  Math.random() * 255;
+
+				//this.buffer.fill(255);
+				//this.buffer.stroke(r, g, b);
+
 				this.buffer.ellipse(	molecule.position.x,
 										molecule.position.y,
 										this.data._window.size-5, 
@@ -308,16 +346,20 @@ angular.module( 'vismining-evowave', [] )
 				var canvas = $canvas[0];
 
 				evowave.data = $scope.data;
-				evowave.data = { _window: { size: 6, amount: 100 }, sectors: { sector5: { angle: 0.15, windows: { window0: { position: 5, molecules: {  molecule1: {}, molecule4: {}, molecule3: {}, molecule10: {}, molecule11: {}, molecule14: {}, molecule13: {}, molecule20: {}, molecule21: {}, molecule24: {}, molecule30: {}, molecule31: {} } }, window1: { position: 4, molecules: { molecule0: {}, molecule1: {}, molecule4: {}, molecule3: {} } } } }, sector6: { angle: 0.35 }, sector3: { angle: 0.25 }, sector4: { angle: 0.05 }, sector2: { angle: 0.15 }, sector1: { angle: 0.05 } } };
+				evowave.data = { _window: { size: 6, amount: 100 }, sectors: [ { angle: 0.10 }, { angle: 0.15 }, { angle: 0.75, windows: [ { position: 10, molecules: [{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }, { position: 9, molecules: [{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF00FF00'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] } ] } ] };
 
-				var size = parseInt(attrs.size);
+				$canvas.attr('width', attrs.width);
+				$element.removeAttr('width');
+
+				$canvas.attr('height', attrs.height);
+				$element.removeAttr('height');
 
 				new Processing(canvas, function(processing) {
 					
 					angular.extend(processing, evowave);
 
 					processing.setup = function() {
-						processing.size(size, size);
+						processing.size(parseInt(attrs.width), parseInt(attrs.height));
 				  		processing.noLoop();
 				  		processing.init();
 					};
