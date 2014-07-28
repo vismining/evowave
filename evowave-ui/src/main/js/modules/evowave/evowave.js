@@ -60,14 +60,14 @@ angular.module( 'vismining-evowave', [] )
 
 				do {
 					this.smallestRadius++;
-					var offset = Math.atan( (this.data._window.size-2) / this.smallestRadius);
+					var offset = Math.atan( (this.data._window.size) / this.smallestRadius);
 				} while((sectorWithSmallestAngle.startAngle + offset) > (sectorWithSmallestAngle.endAngle - offset));
 
 				this.biggestRadius = (this.data._window.amount * this.data._window.size) + 8;
 
 				this.buffer = this.createGraphics((this.biggestRadius+1)*2, (this.biggestRadius+1)*2, 1);
 
-				this.center = {x: (this.width - this.buffer.width) / 2, y: ((this.height - this.buffer.height) / 2)};
+				this.center = {x: this.buffer.width / 2, y: this.buffer.height / 2};
 
 				this.reset();	
 				this.draw();
@@ -106,7 +106,19 @@ angular.module( 'vismining-evowave', [] )
 				this.dirty = {};
 
 				this.background(this.unhex(this.colors.background));
-				this.image(this.buffer, this.center.x, this.center.y, this.buffer.width, this.buffer.height);
+				
+				// TODO: Check why bigger visualization is taking longer to copy
+				this.copy(	this.buffer, 
+							Math.min(Math.max(0, this.center.x - (this.width/2)), this.buffer.width), 
+							Math.min(Math.max(0, this.center.y - (this.height/2)), this.buffer.height), 						
+							Math.max(0, Math.min(this.buffer.width - Math.min(Math.max(0, this.center.x - (this.width/2)), this.buffer.width), this.width)),
+							Math.max(0, Math.min(this.buffer.height - Math.min(Math.max(0, this.center.y - (this.height/2)), this.buffer.height), this.height)),
+							Math.abs(Math.min(0, this.center.x - (this.width/2))), 
+							Math.abs(Math.min(0, this.center.y - (this.height/2))), 
+							Math.max(0, Math.min(this.buffer.width - Math.min(Math.max(0, this.center.x - (this.width/2)), this.buffer.width), this.width)),
+							Math.max(0, Math.min(this.buffer.height - Math.min(Math.max(0, this.center.y - (this.height/2)), this.buffer.height), this.height)));
+
+				console.log(Math.max(0, Math.min(this.buffer.height - Math.min(Math.max(0, this.center.y - (this.height/2)), this.buffer.height), this.height)));
 
 				console.log('Drawing in ' + (Date.now() - execTime) + 'ms');
 			};
@@ -187,8 +199,8 @@ angular.module( 'vismining-evowave', [] )
 				if(this.mouseTracker === undefined){
 					this.mouseTracker = {x: this.mouseX, y: this.mouseY};
 				} else {
-					this.center.x += this.mouseX - this.mouseTracker.x;
-					this.center.y += this.mouseY - this.mouseTracker.y;
+					this.center.x += this.mouseTracker.x - this.mouseX;
+					this.center.y += this.mouseTracker.y - this.mouseY;
 					this.draw();
 					this.mouseTracker.x = this.mouseX;
 					this.mouseTracker.y = this.mouseY;
