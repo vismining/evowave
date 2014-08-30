@@ -19169,9 +19169,22 @@ module.exports = function setupParser(Processing, options) {
     * @see pixels[]
     * @see updatePixels
     */
-    p.loadPixels = function() {
-      p.imageData = drawing.$ensureContext().getImageData(0, 0, p.width, p.height);
+    p.loadPixels = function(x, y, width, height) {
+      if(x === undefined || p.imageData.data === undefined){
+        p.imageData = drawing.$ensureContext().getImageData(0, 0, p.width, p.height);
+      } else if(x !== undefined && y !== undefined && width !== undefined && height !== undefined) {
+
+        pixels = buildPixelsObject({imageData: drawing.$ensureContext().getImageData(x, y, width, height)});
+
+        for(var _x = x; _x < width + x; _x++){
+          for(var _y = y; _y < height + y; _y++){
+            p.pixels.setPixel((_y * p.width) + _x, pixels.getPixel(((_y-y) * width) + (_x-x)));
+          }
+        }
+
+      }
     };
+
 
     // Draws a 1-Dimensional pixel array to Canvas
     /**

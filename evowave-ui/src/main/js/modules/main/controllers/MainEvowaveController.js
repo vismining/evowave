@@ -7,8 +7,8 @@ function MainEvowaveController( $scope ) {
 
 	var size = 1024;
 
-	//$scope.width = 1586;
-	//$scope.height = 748;
+	$scope.width = 1586;
+	$scope.height = 748;
 
 	$scope.jEdit = {
 		
