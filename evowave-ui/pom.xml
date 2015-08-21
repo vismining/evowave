@@ -36,6 +36,9 @@
     <js.libs.processingjs.path>src/main/js/libs/processingjs-${js.libs.processingjs.version}/</js.libs.processingjs.path>
     <js.libs.processingjs.libname>processing.js</js.libs.processingjs.libname>
 
+    <js.libs.colorprocessing.path>src/main/js/libs/colorprocessing/</js.libs.colorprocessing.path>
+    <js.libs.colorprocessing.libname>colorprocessing.js</js.libs.colorprocessing.libname>
+
     <js.angular.modules>src/main/js/modules/</js.angular.modules>
 
     <html.pages.path>src/main/html/</html.pages.path>
@@ -44,7 +47,7 @@
 
     <test.html.pages.path>src/test/html/</test.html.pages.path>
 
-    <env.serverapp.deploy.path>C:\Program Files\apache-tomcat-7.0.27\webapps\</env.serverapp.deploy.path>
+    <env.serverapp.deploy.path>C:\apache-tomcat-7.0.50\webapps\</env.serverapp.deploy.path>
 
   </properties>
 
@@ -139,6 +142,15 @@
               <directory>${js.libs.processingjs.path}</directory>
               <includes>
                 <include>${js.libs.processingjs.libname}</include>
+              </includes>
+            </resource>
+
+            <!-- Color Processing Library -->
+            <resource>
+              <targetPath>js/libs/</targetPath>
+              <directory>${js.libs.colorprocessing.path}</directory>
+              <includes>
+                <include>${js.libs.colorprocessing.libname}</include>
               </includes>
             </resource>
 
