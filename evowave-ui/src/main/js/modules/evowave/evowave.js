@@ -32,11 +32,13 @@ angular.module( 'vismining-evowave', [] )
 				messages: 	 'FFFFFFFF',
 				sectorlines: 'FF000000',
 				molecule: 	 'FF333333',
-				selection:   '1F000000'
+				selection:   '1F000000',
+				fromAmount:  'FF0000FF',
+				toAmount:    'FFFF0000'
 			};
 
 			this.fonts = {
-				SectorLabel: undefined
+				SectorLabel: { font: undefined, fontName: 'Calibri', size: 12 , color: 'FF000000' }
 			};
 
 			this.init = function() {
@@ -45,9 +47,13 @@ angular.module( 'vismining-evowave', [] )
 				var previousSector;
 				var biggestSectorLabel = 0;
 
-				this.fonts.SectorLabel = { font: this.loadFont('Calibri'), size: 12 , color: 'FF000000' };
+				angular.forEach(this.fonts, function(font, fontId){
+					font.font = this.loadFont(font.fontName);
+				}, this);
 
 				this.loadSectorLabelConfig(this);
+
+				this.data.window.max = 0;
 
 				angular.forEach(this.data.sectors, function(sector, sectorId) {
 
@@ -69,18 +75,39 @@ angular.module( 'vismining-evowave', [] )
 						biggestSectorLabel = this.textWidth(sector.label);
 					}
 
+					sector.max = 0;
 
+					angular.forEach(sector.windows, function(_window, windowId){
+						if(_window.molecules.length > sector.max && _window.position <= this.data.window.amount){
+							sector.max = _window.molecules.length;
+						}
+					}, this);
+
+					if(sector.max > this.data.window.max) {
+						this.data.window.max = sector.max;
+					}
 
 				}, this);
 
-				this.smallestRadius = this.data._window.size;
+				var fromColor = new Color(	this.red(this.unhex(this.colors.fromAmount)),
+											this.green(this.unhex(this.colors.fromAmount)),
+											this.blue(this.unhex(this.colors.fromAmount)));
+
+				var toColor = new Color(	this.red(this.unhex(this.colors.toAmount)),
+											this.green(this.unhex(this.colors.toAmount)),
+											this.blue(this.unhex(this.colors.toAmount)));
+
+
+				this.amountColorTransition = new ColorTransition(fromColor, toColor, this.data.window.max);
+
+				this.smallestRadius = this.data.window.size;
 
 				do {
 					this.smallestRadius++;
-					var offset = Math.atan( (this.data._window.size) / this.smallestRadius);
+					var offset = Math.atan( (this.data.window.size) / this.smallestRadius);
 				} while((sectorWithSmallestAngle.startAngle + offset) > (sectorWithSmallestAngle.endAngle - offset));
 
-				this.biggestRadius = this.smallestRadius + (this.data._window.amount * this.data._window.size) + 14;
+				this.biggestRadius = this.smallestRadius + (this.data.window.amount * this.data.window.size) + 14;
 
 				this.buffer = this.createGraphics((this.biggestRadius + biggestSectorLabel + 13)*2, (this.biggestRadius + biggestSectorLabel + 13)*2, 1);
 
@@ -89,7 +116,6 @@ angular.module( 'vismining-evowave', [] )
 				this.reset();	
 				this.draw();
 
-				console.log(this.data);
 			};
 
 			this.draw = function() {
@@ -148,6 +174,7 @@ angular.module( 'vismining-evowave', [] )
 				this.updatePixels();
 
 				console.log('Drawing in ' + (Date.now() - execTime) + 'ms');
+				console.log(this.data);
 			};
 
 			this.loadSectorLabelConfig = function(buffer) {
@@ -205,12 +232,12 @@ angular.module( 'vismining-evowave', [] )
 				var sector = this.data.sectors[sectorId];
 				var _window = sector.windows[windowId];
 
-				var w = this.smallestRadius + ((_window.position-1)*this.data._window.size);
+				var w = this.smallestRadius + ((_window.position-1)*this.data.window.size);
 
-				var startAngle = sector.startAngle + (Math.atan( 2/*sector border weight*/ / (w + (this.data._window.size/2)) ));
-				var endAngle = sector.endAngle - (Math.atan( 2/*sector border weight*/ / (w + (this.data._window.size/2)) ));
+				var startAngle = sector.startAngle + (Math.atan( 2/*sector border weight*/ / (w + (this.data.window.size/2)) ));
+				var endAngle = sector.endAngle - (Math.atan( 2/*sector border weight*/ / (w + (this.data.window.size/2)) ));
 
-				this.fillSector(startAngle, endAngle, (w+this.data._window.size), w);
+				this.fillSector(startAngle, endAngle, (w+this.data.window.size), w);
 
 			};
 
@@ -252,40 +279,56 @@ angular.module( 'vismining-evowave', [] )
 				}
 			};
 
+
+
 			this.drawWindow = function(sectorId, windowId) {
 				var sector = this.data.sectors[sectorId];
 				var _window = sector.windows[windowId];
 				
-				if(_window.position > this.data._window.amount) {
+				if(_window.position > this.data.window.amount) {
 					return;
 				}
 
-				_window.offset = Math.atan((this.data._window.size) / ((_window.position * this.data._window.size) + this.smallestRadius));
+				_window.offset = Math.atan((this.data.window.size) / ((_window.position * this.data.window.size) + this.smallestRadius));
 
-				var startAngle = sector.startAngle + (_window.offset * 2);
-				var endAngle = sector.endAngle - (_window.offset * 2);
+				var w = this.smallestRadius + ((_window.position-1)*this.data.window.size) + (this.data.window.size/2);
+				var startAngle = sector.startAngle + _window.offset + Math.atan( 2 /*sector border weight*/ / w ) + (_window.offset/2);
+				var endAngle = sector.endAngle - _window.offset - Math.atan( 2 /*sector border weight*/ / w ) - (_window.offset/2);
 
 				this.cleanWindow(sectorId, windowId);
 
 				var offset = ((endAngle - startAngle)/(_window.molecules.length-1));
 
-				var tmp_color = Math.floor(Math.random()*200);
+				console.log(startAngle);
+				console.log(endAngle);
+
+				var amountColor = (_window.molecules.length * 200) / this.data.window.max;
+
+				if(this.data.window.mode === 'LOCAL'){
+					amountColor = (_window.molecules.length * 200) / sector.max;
+				}
+
+				amountColor = 200 - amountColor;
+
+				var hex = this.amountColorTransition.getColorAtValue(_window.molecules.length/this.data.window.max).getHex();
+
+				amountColor = this.buffer.unhex('FF' + hex.substring(1, hex.length));
 
 				this.buffer.strokeWeight(1);
-				this.buffer.fill(tmp_color);
-				this.buffer.stroke(tmp_color);
+				this.buffer.fill(amountColor);
+				this.buffer.stroke(amountColor);
 				this.fillSector(
-					sector.startAngle + _window.offset/2, 
+					sector.startAngle +  Math.atan( 2 /*sector border weight*/ / w ), 
 					sector.startAngle + _window.offset, 
-					(_window.position * this.data._window.size) + this.smallestRadius - this.data._window.size + 1,
-					(_window.position * this.data._window.size) + this.smallestRadius - 1
+					(_window.position * this.data.window.size) + this.smallestRadius - this.data.window.size + 1,
+					(_window.position * this.data.window.size) + this.smallestRadius - 1
 				);
 
 				this.fillSector(
 					sector.endAngle - _window.offset, 
-					sector.endAngle - _window.offset/2, 
-					(_window.position * this.data._window.size) + this.smallestRadius - this.data._window.size + 1,
-					(_window.position * this.data._window.size) + this.smallestRadius - 1
+					sector.endAngle - Math.atan( 2 /*sector border weight*/ / w ), 
+					(_window.position * this.data.window.size) + this.smallestRadius - this.data.window.size + 1,
+					(_window.position * this.data.window.size) + this.smallestRadius - 1
 				);
 
 				if(_window.molecules !== undefined && _window.offset <= offset) {
@@ -296,25 +339,24 @@ angular.module( 'vismining-evowave', [] )
 
 					angular.forEach(_window.molecules, function(molecule, moleculeId) {
 						
-						/*
-						if( moleculeIndex == 0 ) {
-							angle = ( ( endAngle - startAngle ) / 2 );
-						} else if( moleculeIndex % 2 != 0) {
-							angle = ( ( endAngle - startAngle ) / 2 ) + ( ( ( moleculeIndex + 1 ) / 2 ) * ( _window.offset ) );
-						} else {
-							angle = ( ( endAngle - startAngle ) / 2 ) - ( ( moleculeIndex / 2 ) * ( _window.offset ) );
-						}
-						*/
-
 						angle = (moleculeIndex * offset);
 
 						moleculeIndex++;
 
 						molecule.position = {
-							x: this.buffer.width/2 + ((((_window.position * this.data._window.size) + this.smallestRadius) - this.data._window.size/2) * this.cos(startAngle + angle)),
-							y: this.buffer.width/2 + ((((_window.position * this.data._window.size) + this.smallestRadius) - this.data._window.size/2) * this.sin(startAngle + angle)),
+							x: this.buffer.width/2 + ((((_window.position * this.data.window.size) + this.smallestRadius) - this.data.window.size/2) * this.cos(startAngle + angle)),
+							y: this.buffer.width/2 + ((((_window.position * this.data.window.size) + this.smallestRadius) - this.data.window.size/2) * this.sin(startAngle + angle)),
 							angle: startAngle + angle
 						};
+
+						molecule.matchQuery = function(query){
+							return query === undefined || query.length == 0 || eval(query);
+						}.call(molecule.data, this.data.query);
+
+						if(molecule.matchQuery){
+							_window.matchQuery++;
+							sector.matchQuery++;
+						}
 
 						this.drawMolecule(sectorId, windowId, moleculeId);
 						
@@ -322,16 +364,16 @@ angular.module( 'vismining-evowave', [] )
 
 				} else {
 
-					var w = this.smallestRadius + ((_window.position-1)*this.data._window.size) + (this.data._window.size/2);
-
-					startAngle = sector.startAngle + (_window.offset);
-					endAngle = sector.endAngle - (_window.offset);
+					startAngle  = sector.startAngle + Math.atan( 2 /*sector border weight*/ / w ) + _window.offset + Math.atan( 1 / w );
+					endAngle = sector.endAngle - (Math.atan( 2 /*sector border weight*/ / w ) + _window.offset + Math.atan( 1 / w ));
 
 					if(_window.hasSpace === undefined){
 
 						_window.hasSpace = false;
 
 						_window.groups = {};
+
+						_window.matchQuery = 0;
 
 						angular.forEach(_window.molecules, function(molecule, moleculeId) {
 
@@ -341,6 +383,15 @@ angular.module( 'vismining-evowave', [] )
 
 							if(_window.groups['_' + molecule.color] === undefined){
 								_window.groups['_' + molecule.color] = {startAngle: 0, endAngle: 0, molecules: []};
+							}
+
+							molecule.matchQuery = function(query){
+								return query === undefined || query.length == 0 || eval(query);
+							}.call(molecule.data, this.data.query);
+
+							if(molecule.matchQuery){
+								_window.matchQuery++;
+								sector.matchQuery++;
 							}
 
 							_window.groups['_' + molecule.color].molecules.push(moleculeId);
@@ -373,16 +424,29 @@ angular.module( 'vismining-evowave', [] )
 
 				var offset = 2;
 
-				var w = this.smallestRadius + ((_window.position-1)*this.data._window.size) + (this.data._window.size/2);
-				var startAngle = moleculeGroup.startAngle + ((Math.atan( 2/*sector border weight*/ / w )));
-				var endAngle = moleculeGroup.endAngle - ((Math.atan( 2/*sector border weight*/ / w )));
-				var biggestRadius = (((_window.position * this.data._window.size) + this.smallestRadius - offset));
-				var smallestRadius = (((Math.max(0, _window.position-1) * this.data._window.size) + this.smallestRadius + offset))
+				var w = this.smallestRadius + ((_window.position-1)*this.data.window.size) + (this.data.window.size/2);
+				var startAngle = moleculeGroup.startAngle;
+				var endAngle = moleculeGroup.endAngle;
+				var biggestRadius = (((_window.position * this.data.window.size) + this.smallestRadius - offset));
+				var smallestRadius = (((Math.max(0, _window.position-1) * this.data.window.size) + this.smallestRadius + offset))
 
+				
+				if(_window.matchQuery > 0){
+					var matchQueryAngle = (endAngle - startAngle) - (((endAngle - startAngle) * _window.matchQuery) / _window.molecules.length);
+					endAngle -= matchQueryAngle;
+				}
 
 				this.buffer.fill(this.buffer.unhex(moleculeGroupId.replace('_','')));
 				this.buffer.stroke(this.buffer.unhex(moleculeGroupId.replace('_','')));
 				this.fillSector(startAngle, endAngle, biggestRadius, smallestRadius);
+
+				
+				if(_window.matchQuery > 0){
+					this.buffer.fill(200);
+					this.buffer.stroke(200);
+					this.fillSector(endAngle, endAngle + matchQueryAngle, biggestRadius, smallestRadius);
+				}
+				
 			};
 
 			this.cleanMoleculeGroup = function(sectorId, windowId, moleculeGroupId) {
@@ -393,11 +457,11 @@ angular.module( 'vismining-evowave', [] )
 
 				var offset = 2;
 
-				var w = this.smallestRadius + ((_window.position-1)*this.data._window.size) + (this.data._window.size/2);
+				var w = this.smallestRadius + ((_window.position-1)*this.data.window.size) + (this.data.window.size/2);
 				var startAngle = moleculeGroup.startAngle + (Math.atan( 2/*sector border weight*/ / w ));
 				var endAngle = moleculeGroup.endAngle - (Math.atan( 2/*sector border weight*/ / w ));
-				var biggestRadius = (((_window.position * this.data._window.size) + this.smallestRadius - offset));
-				var smallestRadius = (((Math.max(0, _window.position-1) * this.data._window.size) + this.smallestRadius + offset))
+				var biggestRadius = (((_window.position * this.data.window.size) + this.smallestRadius - offset));
+				var smallestRadius = (((Math.max(0, _window.position-1) * this.data.window.size) + this.smallestRadius + offset))
 
 
 				this.buffer.fill(255);
@@ -417,14 +481,19 @@ angular.module( 'vismining-evowave', [] )
 					molecule.color = this.colors.molecule;
 				}
 
-				this.buffer.strokeWeight(1);
-				this.buffer.fill(this.buffer.unhex(molecule.color));
-				this.buffer.stroke(255);
-				this.buffer.noStroke();
+				if(!molecule.matchQuery){
+					this.buffer.strokeWeight(1);
+					this.buffer.fill(255);
+					this.buffer.stroke(200);
+				} else {
+					this.buffer.fill(this.buffer.unhex(molecule.color));
+					this.buffer.noStroke();
+				}
+				
 				this.buffer.ellipse(	molecule.position.x,
 										molecule.position.y,
-										this.data._window.size-2, 
-										this.data._window.size-2);
+										this.data.window.size-2, 
+										this.data.window.size-2);
 			};
 
 			this.cleanMolecule = function(sectorId, windowId, moleculeId) {
@@ -441,8 +510,8 @@ angular.module( 'vismining-evowave', [] )
 
 				this.buffer.ellipse(	molecule.position.x,
 										molecule.position.y,
-										this.data._window.size-1, 
-										this.data._window.size-1);
+										this.data.window.size-1, 
+										this.data.window.size-1);
 			};
 
 			this.reset = function() {
@@ -534,7 +603,7 @@ angular.module( 'vismining-evowave', [] )
 					this.mouseTracker.radius = 0;
 				}
 
-				var windowPosition = Math.min(this.data._window.amount, Math.max(0, Math.ceil((this.mouseTracker.radius - this.smallestRadius) / this.data._window.size)));
+				var windowPosition = Math.min(this.data.window.amount, Math.max(0, Math.ceil((this.mouseTracker.radius - this.smallestRadius) / this.data.window.size)));
 				
 				angular.forEach(this.data.sectors, function(sector, sectorId){
 					if(this.mouseTracker.angle >= sector.startAngle && this.mouseTracker.angle <= sector.endAngle){
@@ -563,6 +632,7 @@ angular.module( 'vismining-evowave', [] )
 						return false;
 					}
 				}, this);
+
 			};
 
 			this.updateSelectionTracker = function() {
@@ -753,6 +823,7 @@ angular.module( 'vismining-evowave', [] )
 
 			this.mousePressed = function() {
 				this.updateMouseTracker();
+				console.log(this.mouseTracker);
 				/*
 				if(this.mouseButton == 39) {
 					this.updateSelectionTracker();
@@ -780,8 +851,10 @@ angular.module( 'vismining-evowave', [] )
 				var canvas = $canvas[0];
 
 				evowave.data = $scope.data;
+				
 				evowave.data = { 
-					_window: { size: 6, amount: 25 },
+					query: "this.event.type == 'added'",
+					window: { size: 5, amount: 50, mode: 'GLOBAL' },
 					sectors: [
 						{ angle: 0.20, label: 'Sector01', 
 							windows: [ { position: 1, molecules: [ 
@@ -803,9 +876,9 @@ angular.module( 'vismining-evowave', [] )
 								, { position: 41, molecules: [
 									{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }
 								, { position: 11, molecules: [
-									{ color: 'FFFF0000'}, { color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }
+									{ color: 'FF0000FF', data: { event: { type: 'added' } } }, { color: 'FF0000FF'}, { color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF', data: { event: { type: 'added' } } },{ color: 'FF0000FF', data: { event: { type: 'added' } } },{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF', data: { event: { type: 'added' } } },{ color: 'FF0000FF', data: { event: { type: 'added' } } },{ color: 'FF0000FF', data: { event: { type: 'added' } } },{ color: 'FF0000FF'},{ color: 'FF0000FF', data: { event: { type: 'added' } } },{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF', data: { event: { type: 'added' } } },{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF', data: { event: { type: 'added' } } },{ color: 'FF0000FF', data: { event: { type: 'added' } } },{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF', data: { event: { type: 'added' } } },{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FFFF0000', data: { event: { type: 'added' } } }, { color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }
 								, { position: 12, molecules: [
-									{ color: 'FFFF0000'}, { color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }
+									{ color: 'FFFF0000', data: { event: { type: 'added' } } }, { color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }
 								, { position: 13, molecules: [
 									{ color: 'FFFF0000'}, { color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }
 								, { position: 14, molecules: [
@@ -823,12 +896,12 @@ angular.module( 'vismining-evowave', [] )
 								, { position: 20, molecules: [
 									{ color: 'FFFF0000'}, { color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }
 								, { position: 21, molecules: [
-									{ color: 'FFFF0000'}, { color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }
-								, { position: 150, molecules: [
-									{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }
+									{ color: 'FFFF0000', data: { event: { type: 'added' } } }, { color: 'FFFF0000'}, { color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}, { color: 'FFFF0000'}, { color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }
 								, { position: 30, molecules: [
 									{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'} 
 									] } ] } ] };
+				
+
 				
 				$canvas.attr('width', $element.parent()[0].clientWidth);
 
