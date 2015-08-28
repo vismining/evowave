@@ -15,22 +15,15 @@
 
   <properties>
     
-    <js.libs.angular.version>1.2.20</js.libs.angular.version>
-    <js.libs.angular-ui.version>0.11.0</js.libs.angular-ui.version>
+    <js.libs.angular.version>1.4.3</js.libs.angular.version>
 
-    <css.libs.bootstrap.version>3.2.0</css.libs.bootstrap.version>
-    
     <js.libs.angular.core.path>src/main/js/libs/angular-${js.libs.angular.version}/</js.libs.angular.core.path>
     <js.libs.angular.core.libname>angular.js</js.libs.angular.core.libname>
 
     <js.libs.angular.route.path>src/main/js/libs/angular-${js.libs.angular.version}/</js.libs.angular.route.path>
     <js.libs.angular.route.libname>angular-route.js</js.libs.angular.route.libname>
 
-    <js.libs.angular-ui.path>src/main/js/libs/angular-ui-${js.libs.angular-ui.version}/</js.libs.angular-ui.path>
-    <js.libs.angular-ui.libname>ui-bootstrap.js</js.libs.angular-ui.libname>
 
-    <css.libs.bootstrap.path>src/main/css/libs/bootstrap-${css.libs.bootstrap.version}/</css.libs.bootstrap.path>
-    <css.libs.bootstrap.libname>bootstrap.css</css.libs.bootstrap.libname>
 
     <js.libs.processingjs.version>1.4.8</js.libs.processingjs.version>
     <js.libs.processingjs.path>src/main/js/libs/processingjs-${js.libs.processingjs.version}/</js.libs.processingjs.path>
@@ -38,6 +31,25 @@
 
     <js.libs.colorprocessing.path>src/main/js/libs/colorprocessing/</js.libs.colorprocessing.path>
     <js.libs.colorprocessing.libname>colorprocessing.js</js.libs.colorprocessing.libname>
+
+    <js.libs.momentjs.version>2.10.6</js.libs.momentjs.version>
+    <js.libs.momentjs.path>src/main/js/libs/momentjs-${js.libs.momentjs.version}/</js.libs.momentjs.path>
+    <js.libs.momentjs.libname>moment.js</js.libs.momentjs.libname>
+
+
+    <js.libs.bootstrap.version>3.3.5</js.libs.bootstrap.version>
+    <js.libs.bootstrap.path>src/main/js/libs/bootstrap-${js.libs.bootstrap.version}/</js.libs.bootstrap.path>
+    <js.libs.bootstrap.libname>bootstrap.js</js.libs.bootstrap.libname>
+
+    <css.libs.bootstrap.version>3.3.5</css.libs.bootstrap.version>
+    <css.libs.bootstrap.path>src/main/css/libs/bootstrap-${js.libs.bootstrap.version}/css/</css.libs.bootstrap.path>
+    <css.libs.bootstrap.libname>bootstrap.css</css.libs.bootstrap.libname>
+
+    <fonts.bootstrap.path>src/main/css/libs/bootstrap-${js.libs.bootstrap.version}/fonts/</fonts.bootstrap.path>
+
+    <js.libs.angular-ui-bootstrap.version>0.13.3</js.libs.angular-ui-bootstrap.version>
+    <js.libs.angular-ui-bootstrap.path>src/main/js/libs/angular-ui-bootstrap-${js.libs.angular-ui-bootstrap.version}/</js.libs.angular-ui-bootstrap.path>
+    <js.libs.angular-ui-bootstrap.libname>ui-bootstrap.js</js.libs.angular-ui-bootstrap.libname>
 
     <js.angular.modules>src/main/js/modules/</js.angular.modules>
 
@@ -118,24 +130,6 @@
               </includes>
             </resource>
 
-            <!-- AngularJS UI Library -->
-            <resource>
-              <targetPath>js/libs/</targetPath>
-              <directory>${js.libs.angular-ui.path}</directory>
-              <includes>
-                <include>${js.libs.angular-ui.libname}</include>
-              </includes>
-            </resource>
-
-            <!-- Bootstrap CSS Library -->
-            <resource>
-              <targetPath>css/libs/</targetPath>
-              <directory>${css.libs.bootstrap.path}</directory>
-              <includes>
-                <include>${css.libs.bootstrap.libname}</include>
-              </includes>
-            </resource>
-
             <!-- ProcessingJS Library -->
             <resource>
               <targetPath>js/libs/</targetPath>
@@ -151,6 +145,60 @@
               <directory>${js.libs.colorprocessing.path}</directory>
               <includes>
                 <include>${js.libs.colorprocessing.libname}</include>
+              </includes>
+            </resource>
+
+            <!-- MomentJS Library -->
+            <resource>
+              <targetPath>js/libs/</targetPath>
+              <directory>${js.libs.momentjs.path}</directory>
+              <includes>
+                <include>${js.libs.momentjs.libname}</include>
+              </includes>
+            </resource>
+
+            <!-- MomentJS Library -->
+            <resource>
+              <targetPath>js/libs/</targetPath>
+              <directory>${js.libs.momentjs.path}</directory>
+              <includes>
+                <include>${js.libs.momentjs.libname}</include>
+              </includes>
+            </resource>
+
+            <!-- Bootstrap JS Library -->
+            <resource>
+              <targetPath>js/libs/</targetPath>
+              <directory>${js.libs.bootstrap.path}</directory>
+              <includes>
+                <include>${js.libs.bootstrap.libname}</include>
+              </includes>
+            </resource>
+
+            <!-- Bootstrap CSS Library -->
+            <resource>
+              <targetPath>css/libs/</targetPath>
+              <directory>${css.libs.bootstrap.path}</directory>
+              <includes>
+                <include>${css.libs.bootstrap.libname}</include>
+              </includes>
+            </resource>
+
+            <!-- AngularUI Bootstrap JS Library -->
+            <resource>
+              <targetPath>js/libs/</targetPath>
+              <directory>${js.libs.angular-ui-bootstrap.path}</directory>
+              <includes>
+                <include>${js.libs.angular-ui-bootstrap.libname}</include>
+              </includes>
+            </resource>
+
+
+            <resource>
+              <targetPath>css/fonts/</targetPath>
+              <directory>${fonts.bootstrap.path}</directory>
+              <includes>
+                <include>*</include>
               </includes>
             </resource>
 

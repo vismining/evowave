@@ -2,24 +2,92 @@
 <html style="margin:0px;width:100%;height:100%;overflow:hidden;">
 	
 	<head>
-		<title>${name}</title>
+		<title>EVOWAVE: An open-source software evolution visualization</title>
 		
-		<script type="text/javascript" src="/${artifactId}-${version}/js/libs/${js.libs.processingjs.libname}"></script>
-		<script type="text/javascript" src="/${artifactId}-${version}/js/libs/${js.libs.angular.core.libname}"></script>
-		<script type="text/javascript" src="/${artifactId}-${version}/js/libs/${js.libs.angular.route.libname}"></script>
-		<script type="text/javascript" src="/${artifactId}-${version}/js/libs/${js.libs.angular-ui.libname}"></script>
-		<script type="text/javascript" src="/${artifactId}-${version}/js/libs/${js.libs.colorprocessing.libname}"></script>
-		<script type="text/javascript" src="/${artifactId}-${version}/js/modules/main/main.js"></script>
-		<script type="text/javascript" src="/${artifactId}-${version}/js/modules/main/controllers/MainEvowaveController.js"></script>
-		<script type="text/javascript" src="/${artifactId}-${version}/js/modules/evowave/evowave.js"></script>
-		<link rel="stylesheet" href="/${artifactId}-${version}/css/libs/${css.libs.bootstrap.libname}" />
+		<script type="text/javascript" src="/evowave-ui-1.0.0-SNAPSHOT/js/libs/processing.js"></script>
+		<script type="text/javascript" src="/evowave-ui-1.0.0-SNAPSHOT/js/libs/angular.js"></script>
+		<script type="text/javascript" src="/evowave-ui-1.0.0-SNAPSHOT/js/libs/angular-route.js"></script>
+		<script type="text/javascript" src="/evowave-ui-1.0.0-SNAPSHOT/js/libs/colorprocessing.js"></script>
+		<script type="text/javascript" src="/evowave-ui-1.0.0-SNAPSHOT/js/libs/moment.js"></script>
+		<script type="text/javascript" src="/evowave-ui-1.0.0-SNAPSHOT/js/libs/ui-bootstrap.js"></script>
+		<script type="text/javascript" src="/evowave-ui-1.0.0-SNAPSHOT/js/modules/main/main.js"></script>
+		<script type="text/javascript" src="/evowave-ui-1.0.0-SNAPSHOT/js/modules/main/controllers/MainEvowaveController.js"></script>
+		<script type="text/javascript" src="/evowave-ui-1.0.0-SNAPSHOT/js/modules/evowave/evowave.js"></script>
+		<link rel="stylesheet" href="/evowave-ui-1.0.0-SNAPSHOT/css/libs/bootstrap.css" />
+		<style>
+			body {
+				font-family: 'Calibri';
+				font-size:12px;
+				
+			}
+			.parent {
+			    display: table;
+			    table-layout: fixed;
+			}
+
+			.child {
+			    display:table-cell;
+			    vertical-align:middle;
+			    text-align:center;
+			}
+
+			.front {
+				position: absolute;
+				z-index: 1;
+			}
+
+			.info {
+				background-color: #000;
+				border-radius: 4px;
+				color: #fff;
+				padding: 2px 6px;
+				font-family: 'Calibri';
+				font-size:12px;
+				cursor: crosshair;
+			}
+
+			.label {
+				background-color: #eee;
+				border-radius:4px;
+				border:1px solid #ccc;
+				padding: 4px;
+				text-align:center;
+				vertical-align:middle;
+				font-size:12px;
+			}
+		</style>
 	</head>
 	
 	<body style="margin:0px;width:100%;height:100%;" ng-app="evowave-main">
-		<div ng-controller="MainEvowaveController" style="width:100%;height:100%;">
-			<evowave data="jEdit" />
+		<div ng-controller="MainEvowaveController" style="width:100%;height:100%;position: relative;vertical-align: middle; align-text:center;">
+			<div class="front" style="top:5px; left:5px;">
+				<div class="btn-group" dropdown>
+					<button id="split-button" type="button" class="btn btn-danger">jEdit</button>
+					<button type="button" class="btn btn-danger" dropdown-toggle>
+						<span class="caret"></span>
+					</button>
+					<ul class="dropdown-menu" role="menu" aria-labelledby="split-button">
+						<li role="menuitem"><a href="#">JHotDraw</a></li>
+						<li role="menuitem"><a href="#">JMonkeyEngine</a></li>
+						<li role="menuitem"><a href="#">Maven</a></li>
+					</ul>
+			    </div>
+			    <span class="label"><code>from</code> <kbd ng-click="showHideDtFrom()" style="cursor:pointer;">{{formatDate(dtFrom)}}</kbd></span>
+		    	<span class="label"><code>to</code> <kbd ng-click="showHideDtTo()" style="cursor:pointer;">{{formatDate(dtTo)}}</kbd></span>
+		    	<span class="label"><code>grouped by</code> <kbd style="cursor:pointer;">10</kbd> <code>days</code></span>
+		    	<span class="label"><code>oldest in </code><kbd style="cursor:pointer;">center</kbd></span>
+		    	<span class="label"><code>events counted</code> <kbd style="cursor:pointer;">locally</kbd></span>
+		    	<span class="label"><code>events filtered by</code> <kbd style="cursor:pointer;">this.complexity == 10</kbd></span>
+		    </div>
+		    <div class="front" style="top:40px;left:80px;">
+		    <datepicker ng-model="dtFrom" init-date="dtFrom" min-date="dtMin" max-date="dtMax" ng-show="dtFromShow" show-weeks="true" class="well well-sm"></datepicker>
+		    <datepicker ng-model="dtTo" init-date="dtTo" min-date="dtMin" max-date="dtMax" ng-show="dtToShow" show-weeks="true" class="well well-sm"></datepicker>
+		    </div>
+			<evowave data="jEdit" handler="handle" />
 		</div>
 
 	</body>
+
+</html></body>
 
 </html>

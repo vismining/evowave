@@ -1,12 +1,178 @@
-angular.module( 'vismining-evowave', [] )
+var vismining = angular.module( 'vismining-evowave', [] );
 
-	.run(['$templateCache', function($templateCache) {
+	vismining.run(['$templateCache', function($templateCache) {
 		$templateCache.put("template/vismining/evowave.html",
-			"<canvas style='background-color: #CCCCCC; outline: none; -webkit-tap-highlight-color: rgba(255, 255, 255, 0);' />"
+			"<canvas style='cursor: default; background-color: #CCCCCC; outline: none; -webkit-tap-highlight-color: rgba(255, 255, 255, 0);' />"
 		);
-	}])
+	}]);
 
-	.factory('evowave', function() {
+	vismining.factory('evowave-utilities', [function() {
+		return new function() {
+
+			this.clone = function(source) {
+
+				var destination = undefined;
+
+				if(typeof source === 'object' && source instanceof Array){
+					destination = [];
+           			source.forEach(function(elem, index){
+           				var clonnedElem;
+           				clonnedElem = this.clone(elem);
+           				destination.push(clonnedElem);
+           			}, this);					
+				} else if(typeof source === 'object'){
+					destination = {};
+					for (var property in source) {
+						if(typeof source[property] === 'object'){
+							destination[property] = this.clone(source[property]);
+						} else {
+							destination[property] = source[property];
+						}
+			        }
+				}
+
+				return destination;
+
+		    };
+
+		};
+	}]);
+
+	vismining.factory('evowave-filters', ['evowave-utilities', function(util) {
+		return new function() {
+
+			this.groupWindowsInDays = function(days, data){
+
+				if(data === undefined){
+					data = this.data;
+				}
+
+				var result;
+
+				delete this.days;
+
+				if(this.starts !== undefined && this.ends !== undefined){
+					result = this.changePeriod(this.starts, this.ends);
+				} else {
+					result = util.clone(data);
+				}
+
+				this.days = days;
+
+				var aggregator = (function(sector, days){
+
+					if(sector.sectors !== undefined){
+
+						sector.sectors.forEach(function( s, sectorId) {
+
+							aggregator(s, days);
+
+						});
+
+					} else if(sector.windows !== undefined){
+						
+						var windows = [];
+						var windowsDictionary = {};
+
+						sector.windows.forEach(function( _window, windowId ){
+
+							var newPosition = Math.ceil(_window.position / days);
+
+							if(windowsDictionary[newPosition] === undefined){
+								windowsDictionary[newPosition] = { position: newPosition, molecules: [] };
+							}
+
+							var cWindow = windowsDictionary[newPosition];
+
+							Array.prototype.push.apply(cWindow.molecules, _window.molecules);
+							windows.push(cWindow);
+
+						});
+
+						sector.windows = windows;
+
+					}
+				}).bind(this);
+
+				aggregator(result, days);
+
+				result.window.amount = Math.ceil(data.window.amount / days);
+
+				return result;
+
+			};
+
+
+			this.changePeriod = function(starts, ends) {
+
+				delete this.starts;
+				delete this.ends;
+
+				var cStarts = moment(this.data.period.starts, "DD/MM/YYYY HH:mm:ss Z");
+				var cEnds = moment(this.data.period.ends, "DD/MM/YYYY HH:mm:ss Z");
+
+				mStarts = moment(starts, "DD/MM/YYYY HH:mm:ss Z");
+				mEnds = moment(ends, "DD/MM/YYYY HH:mm:ss Z");
+
+				var daysAfter = mStarts.diff(cStarts, 'days');
+				var daysBefore = mEnds.diff(cEnds, 'days');
+
+				var result = util.clone(this.data);
+
+				if((this.data.window.amount - daysAfter + daysBefore) < 0 || (this.data.window.amount - daysAfter + daysBefore) > this.data.window.amount || daysAfter < 0 || daysBefore > 0){
+					return;
+				}
+
+				var remover = (function(sector, daysAfter, daysBefore) {
+
+					if(sector.sectors !== undefined){
+
+						sector.sectors.forEach(function( s, sectorId) {
+
+							remover(s, daysAfter, daysBefore);
+
+						});
+
+					} else if(sector.windows !== undefined){
+						
+						var windows = [];
+
+						sector.windows.forEach(function( _window, windowId ){
+							if(_window.position > daysAfter && _window.position <= (this.data.window.amount + daysBefore)){
+								_window.position -= daysAfter;
+								windows.push(_window);
+							}
+						}, this);
+
+						sector.windows = windows;
+
+					}
+
+				}).bind(this);
+
+				remover(result, daysAfter, daysBefore);
+
+				result.window.amount -= daysAfter;
+				result.window.amount += daysBefore;
+
+				if(this.days !== undefined){
+
+					result = this.groupWindowsInDays(this.days, result);
+
+				}
+
+				this.starts = starts;
+				this.ends = ends;
+
+				return result;
+
+			};
+
+		};
+	
+	}]);
+
+	vismining.factory('evowave-algorithm', ['evowave-utilities', function(util) {
 
 		/* 
 			TODO: this should be another project (perhaps evowave-js) 
@@ -21,53 +187,113 @@ angular.module( 'vismining-evowave', [] )
 			};
 
 			this.messages = {
-				noDataFound: 'No data found to display!'
+				noDataFound: 'No data found to display!',
+				loading: 'Loading...'
 			};
 
 			this.colors = {
-				background:  'FFFFFFFF',
-				sector_odd:  'FFF0F0F0',
-				sector_even: 'FFE3E3E3',
-				guidelines:  'FF5796FD',
-				messages: 	 'FFFFFFFF',
-				sectorlines: 'FF000000',
-				molecule: 	 'FF333333',
-				selection:   '1F000000',
-				fromAmount:  'FF0000FF',
-				toAmount:    'FFFF0000'
+				background_canvas:  'FFFFFFFF',
+				background:  		'FFFFFFFF',
+				sector_odd:  		'FFCCCCCC',
+				sector_even: 		'FFCCCCCC',
+				guidelines:  		'FF5796FD',
+				window_guideline:	'6E000000',
+				messages: 	 		'FF000000',
+				sectorlines: 		'FF000000',
+				molecule: 	 		'FF333333',
+				selection:   		'F0000000',
+				fromAmount:  		'FF0000FF',
+				toAmount:    		'FFFF0000',
+				matchQuery: 		'FFCCCCCC'
 			};
 
 			this.fonts = {
-				SectorLabel: { font: undefined, fontName: 'Calibri', size: 12 , color: 'FF000000' }
+				SectorLabel: { font: undefined, fontName: 'Calibri', size: 12, color: 'FF000000' },
+				Messages: { font: undefined, fontName: 'Arial', size: 12, color: 'FF000000' }
 			};
 
-			this.init = function() {
-				
-				var sectorWithSmallestAngle;
-				var previousSector;
-				var biggestSectorLabel = 0;
+			
+			this.start = function() {
+				this.mode = 'OVERVIEW';
+				this.sector = undefined;
+				this.sectors = undefined;
 
 				angular.forEach(this.fonts, function(font, fontId){
 					font.font = this.loadFont(font.fontName);
 				}, this);
 
-				this.loadSectorLabelConfig(this);
+				this.loadFontInBuffer(this, this.fonts.Messages);
+
+
+				if(this.data === undefined){
+					this.background(this.unhex(this.colors.background_canvas));
+					this.fill(this.unhex(this.colors.messages));
+					this.text(this.messages.noDataFound, (this.width - this.textWidth(this.messages.noDataFound))/2, this.height/2);
+				}
+
+				this.init();
+			};
+
+			this.init = function() {
+				
+				this.isInitialized = false;
+
+				if(this.data === undefined){
+					return false;
+				}
+
+				var sectorWithSmallestAngle;
+				var previousSector;
+				var biggestSectorLabel = 0;
+
+				delete this.dirty;
+				delete this.mouseTracker;
+
+				if(this.mode === undefined){
+					this.mode = 'OVERVIEW';
+				}
+
+				if(this.data.window === undefined){
+					this.data.window = { size: 5, amount: 50 };
+				}
+
+				if(this.sector === undefined){
+					this.sector = this.data;
+					this.sector.label = this.data.sector.label;
+					this.sectorsZoom = [];
+				}
+
+				this.loadFontInBuffer(this, this.fonts.SectorLabel);
 
 				this.data.window.max = 0;
 
-				angular.forEach(this.data.sectors, function(sector, sectorId) {
+				if(this.mode === 'OVERVIEW'){
+					this.sectors = [];
+					this.sectors.push(this.sector);
+				} else if(this.mode === 'DETAILED'){
+					this.sectors = this.sector.sectors;
+				}
+
+				this.extractWindowsFromSectors(this.data);
+
+				angular.forEach(this.sectors, function(sector, sectorId) {
 
 					var startAngle = 0;
 					var endAngle = (Math.PI * 2);
+					var sectorAngle = sector.angle;
+
+					if(this.mode === 'OVERVIEW'){
+						sectorAngle = 1;
+					}
 
 					sector.startAngle = (previousSector === undefined) ? startAngle : previousSector.endAngle;
-					sector.endAngle = sector.startAngle + ((endAngle-startAngle) * sector.angle);
+					sector.endAngle = sector.startAngle + ((endAngle-startAngle) * sectorAngle);
 
 					previousSector = sector;
 
 					if(sectorWithSmallestAngle === undefined){
 						sectorWithSmallestAngle = sector;
-					} else if(sectorWithSmallestAngle.angle > sector.angle){
+					} else if(sectorWithSmallestAngle.angle > sectorAngle){
 						sectorWithSmallestAngle = sector;
 					}
 
@@ -104,27 +330,63 @@ angular.module( 'vismining-evowave', [] )
 
 				do {
 					this.smallestRadius++;
-					var offset = Math.atan((this.data.window.size * 2) / this.smallestRadius);
+					var offset = Math.atan((this.data.window.size) / this.smallestRadius) + (Math.atan( 4 /*sector border weight*/ / this.smallestRadius ) * 2);
 				} while((sectorWithSmallestAngle.startAngle + offset) > (sectorWithSmallestAngle.endAngle - offset));
 
-				this.biggestRadius = this.smallestRadius + (this.data.window.amount * this.data.window.size) + 14;
+				this.biggestRadius = this.smallestRadius + ((this.data.window.amount) * this.data.window.size) + 6;
 
-				this.buffer = this.createGraphics((this.biggestRadius + biggestSectorLabel + 13)*2, (this.biggestRadius + biggestSectorLabel + 13)*2, 1);
+				if(this.buffer === undefined || this.buffer.width !== (this.biggestRadius + biggestSectorLabel + 13)*2 || this.buffer.height !== (this.biggestRadius + biggestSectorLabel + 13)*2){
+					this.buffer = this.createGraphics((this.biggestRadius + biggestSectorLabel + 13)*2, (this.biggestRadius + biggestSectorLabel + 13)*2, 1);
+				}
 
 				this.center = {x: (this.buffer.width/2), y: (this.buffer.width/2)};
 
-				this.reset();	
+				this.isInitialized = true;
+
 				this.draw();
 
 			};
 
+			this.extractWindowsFromSectors = function(sector) {
+				if(sector.sectors !== undefined){
+
+					var context = {};
+
+					context.windows = [];
+					context.windowsDictionary = {};
+					context['extractWindowsFromSectors'] = this.extractWindowsFromSectors;
+
+					angular.forEach(sector.sectors, function(_sector, sectorId) {
+
+						this.extractWindowsFromSectors(_sector);
+
+						_sector.windows.some(function(_window, windowId){
+
+							if(this.windowsDictionary[_window.position] === undefined){
+								this.windowsDictionary[_window.position] = { position: _window.position, molecules: [] };
+								this.windows.push(this.windowsDictionary[_window.position]);
+							}
+
+							var cWindow = this.windowsDictionary[_window.position];
+
+							Array.prototype.push.apply(cWindow.molecules, _window.molecules);
+
+						}, context);
+
+					}, context);
+
+					sector.windows = context.windows;
+					
+				}
+			};
+
 			this.draw = function() {
 				
-				var execTime = Date.now();
-				
-				if(this.data === undefined) {
+				if(this.data === undefined || !this.isInitialized) {
 					return;
 				}
+
+				var execTime = Date.now();
 
 				var srcX = Math.round(Math.min(Math.max(0, this.center.x - (this.width/2)), this.buffer.width));
 				var	srcY = Math.round(Math.min(Math.max(0, this.center.y - (this.height/2)), this.buffer.width));
@@ -137,17 +399,21 @@ angular.module( 'vismining-evowave', [] )
 				var	dstHeight = srcHeight;				
 
 				if(this.dirty === undefined) {
-					angular.forEach(this.data.sectors, function(sector, sectorId) {
+					this.reset();
+					angular.forEach(this.sectors, function(sector, sectorId) {
 						this.drawSector(sectorId);
 					}, this);
-					this.buffer.loadPixels(srcX, srcY, srcWidth, srcHeight);
-				} else if(Object.keys(this.dirty) > 0) {
+				} else if(Object.keys(this.dirty).length > 0) {
 					angular.forEach(this.dirty, function(sector, sectorId) {
 						if(sector.windows !== undefined && Object.keys(sector.windows).length > 0) {
 							angular.forEach(sector.windows, function(_window, windowId) {
 								if(_window.molecules !== undefined && Object.keys(_window.molecules).length > 0){
 									angular.forEach(_window.molecules, function(molecule, moleculeId) {
 										this.drawMolecule(sectorId, windowId, moleculeId);
+									}, this);
+								} else if(_window.moleculeGroups !== undefined && Object.keys(_window.moleculeGroups).length > 0){
+									angular.forEach(_window.moleculeGroups, function(moleculeGroup, moleculeGroupId) {
+										this.drawMoleculeGroup(sectorId, windowId, moleculeGroupId);
 									}, this);
 								} else {
 									this.drawWindow(sectorId, windowId);
@@ -157,12 +423,13 @@ angular.module( 'vismining-evowave', [] )
 							this.drawSector(sectorId);
 						}
 					}, this);
-					this.buffer.loadPixels(srcX, srcY, srcWidth, srcHeight);
  				}
+
+ 				this.buffer.loadPixels(srcX, srcY, srcWidth, srcHeight);
 
 				this.dirty = {};
 
-				this.background(this.unhex(this.colors.background));
+				this.background(this.unhex(this.colors.background_canvas));
 				this.loadPixels();
 
 				for(var x = srcX; x < srcWidth + srcX; x++){
@@ -174,17 +441,17 @@ angular.module( 'vismining-evowave', [] )
 				this.updatePixels();
 
 				console.log('Drawing in ' + (Date.now() - execTime) + 'ms');
-				console.log(this.data);
 			};
 
-			this.loadSectorLabelConfig = function(buffer) {
-				buffer.textFont(this.fonts.SectorLabel.font);
-				buffer.textSize(this.fonts.SectorLabel.size);
+			this.loadFontInBuffer = function(buffer, font) {
+				buffer.fill(buffer.unhex(font.color));
+				buffer.textFont(font.font);
+				buffer.textSize(font.size);
 			};
 
 			this.drawSector = function(sectorId) {
 	
-				var sector = this.data.sectors[sectorId];
+				var sector = this.sectors[sectorId];
 
 				this.cleanSector(sectorId);
 
@@ -201,7 +468,7 @@ angular.module( 'vismining-evowave', [] )
 									(this.buffer.width/2) + (this.biggestRadius * this.buffer.cos(sector.endAngle)), 
 									(this.buffer.width/2) + (this.biggestRadius * this.buffer.sin(sector.endAngle)));
 
-				this.loadSectorLabelConfig(this.buffer);
+				this.loadFontInBuffer(this.buffer, this.fonts.SectorLabel);
 
 				var sectorLabelAngle = sector.startAngle + ((sector.endAngle - sector.startAngle) / 2);
 				var sectorLabelRadius = (this.biggestRadius + (this.textWidth(sector.label) / 2)) + 12;
@@ -229,7 +496,7 @@ angular.module( 'vismining-evowave', [] )
 			};
 
 			this.fillWindow = function(sectorId, windowId) {
-				var sector = this.data.sectors[sectorId];
+				var sector = this.sectors[sectorId];
 				var _window = sector.windows[windowId];
 
 				var w = this.smallestRadius + ((_window.position-1)*this.data.window.size);
@@ -242,15 +509,15 @@ angular.module( 'vismining-evowave', [] )
 			};
 
 			this.cleanWindow = function(sectorId, windowId) {
-				this.buffer.strokeWeight(1);
-				this.buffer.fill(0);
-				this.buffer.stroke(0);
+				this.buffer.fill(this.buffer.unhex(this.colors.background));
+				this.buffer.noStroke();
 				this.fillWindow(sectorId, windowId);
 			};
 
 			this.cleanSector = function(sectorId) {
 
-				var sector = this.data.sectors[sectorId];
+				var sector = this.sectors[sectorId];
+
 				if(sector.background === undefined){
 					if((sectorId % 2) == 0){
 						sector.background = this.colors.sector_odd;
@@ -268,22 +535,36 @@ angular.module( 'vismining-evowave', [] )
 			this.fillSector = function(startAngle, endAngle, biggestRadius, smallestRadius) {
 				var angle = startAngle;
 
+				this.buffer.beginShape();
+
 				while(angle <= endAngle){
-					var nextAngle = Math.min(endAngle, angle + (Math.PI/180));
-					this.buffer.beginShape();
-						this.buffer.vertex((this.buffer.width/2) + (biggestRadius * this.buffer.cos(angle)), (this.buffer.width/2) + (biggestRadius * this.buffer.sin(angle)));
-						this.buffer.vertex((this.buffer.width/2) + (biggestRadius * this.buffer.cos(nextAngle)), (this.buffer.width/2) + (biggestRadius * this.buffer.sin(nextAngle)));
-						this.buffer.vertex((this.buffer.width/2) + (smallestRadius * this.buffer.cos(nextAngle)), (this.buffer.width/2) + (smallestRadius * this.buffer.sin(nextAngle)));
-						this.buffer.vertex((this.buffer.width/2) + (smallestRadius * this.buffer.cos(angle)), (this.buffer.width/2) + (smallestRadius * this.buffer.sin(angle)));
-					this.buffer.endShape(2);
-					angle += (Math.PI/180);
+					var nextAngle = Math.min(endAngle, angle + (Math.PI/90));
+					
+					this.buffer.vertex((this.buffer.width/2) + (smallestRadius * this.buffer.cos(angle)), (this.buffer.width/2) + (smallestRadius * this.buffer.sin(angle)));
+					this.buffer.vertex((this.buffer.width/2) + (smallestRadius * this.buffer.cos(nextAngle)), (this.buffer.width/2) + (smallestRadius * this.buffer.sin(nextAngle)));
+					
+					angle += (Math.PI/90);
 				}
+
+				angle = endAngle;
+
+				while(angle >= startAngle){
+					var nextAngle = Math.max(startAngle, angle - (Math.PI/90));
+					
+					this.buffer.vertex((this.buffer.width/2) + (biggestRadius * this.buffer.cos(angle)), (this.buffer.width/2) + (biggestRadius * this.buffer.sin(angle)));
+					this.buffer.vertex((this.buffer.width/2) + (biggestRadius * this.buffer.cos(nextAngle)), (this.buffer.width/2) + (biggestRadius * this.buffer.sin(nextAngle)));
+				
+					angle -= (Math.PI/90);
+				}
+	
+
+				this.buffer.endShape(2);
 			};
 
 
 
 			this.drawWindow = function(sectorId, windowId) {
-				var sector = this.data.sectors[sectorId];
+				var sector = this.sectors[sectorId];
 				var _window = sector.windows[windowId];
 				
 				if(_window.position > this.data.window.amount) {
@@ -293,12 +574,12 @@ angular.module( 'vismining-evowave', [] )
 				_window.offset = Math.atan((this.data.window.size) / ((_window.position * this.data.window.size) + this.smallestRadius));
 
 				var w = this.smallestRadius + ((_window.position-1)*this.data.window.size) + (this.data.window.size/2);
-				var startAngle = sector.startAngle + _window.offset + Math.atan( 2 /*sector border weight*/ / w ) + (_window.offset/2);
-				var endAngle = sector.endAngle - _window.offset - Math.atan( 2 /*sector border weight*/ / w ) - (_window.offset/2);
+				var startAngle = sector.startAngle + Math.atan( 3*3 /*sector border weight*/ / w ) + (_window.offset/2);
+				var endAngle = sector.endAngle - Math.atan( 3*3 /*sector border weight*/ / w ) - (_window.offset/2);
 
 				this.cleanWindow(sectorId, windowId);
 
-				var offset = ((endAngle - startAngle)/(_window.molecules.length-1));
+				var offset = ((endAngle - startAngle)/Math.max((_window.molecules.length-1), 1));
 
 				var amountColor = (_window.molecules.length * 200) / this.data.window.max;
 
@@ -314,15 +595,15 @@ angular.module( 'vismining-evowave', [] )
 				this.buffer.fill(amountColor);
 				this.buffer.stroke(amountColor);
 				this.fillSector(
-					sector.startAngle +  Math.atan( 2 /*sector border weight*/ / w ), 
-					sector.startAngle + _window.offset, 
+					sector.startAngle + Math.atan( 3 /*sector border weight*/ / w ), 
+					sector.startAngle + Math.atan( 4 /*sector border weight*/ / w ), 
 					(_window.position * this.data.window.size) + this.smallestRadius - this.data.window.size + 1,
 					(_window.position * this.data.window.size) + this.smallestRadius - 1
 				);
 
 				this.fillSector(
-					sector.endAngle - _window.offset, 
-					sector.endAngle - Math.atan( 2 /*sector border weight*/ / w ), 
+					sector.endAngle - Math.atan( 4 /*sector border weight*/ / w ), 
+					sector.endAngle - Math.atan( 3 /*sector border weight*/ / w ), 
 					(_window.position * this.data.window.size) + this.smallestRadius - this.data.window.size + 1,
 					(_window.position * this.data.window.size) + this.smallestRadius - 1
 				);
@@ -331,6 +612,11 @@ angular.module( 'vismining-evowave', [] )
 
 					var moleculeIndex = 0;
 
+					if(_window.molecules.length === 1){
+						moleculeIndex = 1;
+						offset = (endAngle - startAngle) / 2;
+					}
+					
 					_window.hasSpace = true;
 
 					angular.forEach(_window.molecules, function(molecule, moleculeId) {
@@ -346,8 +632,8 @@ angular.module( 'vismining-evowave', [] )
 						};
 
 						molecule.matchQuery = function(query){
-							return query === undefined || query.length == 0 || eval(query);
-						}.call(molecule.data, this.data.query);
+							return query === undefined || query.length == 0 || typeof eval(query) !== 'boolean' || eval(query);
+						}.call(util.clone(molecule.data), this.data.query);
 
 						if(molecule.matchQuery){
 							_window.matchQuery++;
@@ -360,40 +646,36 @@ angular.module( 'vismining-evowave', [] )
 
 				} else {
 
-					startAngle  = sector.startAngle + Math.atan( 2 /*sector border weight*/ / w ) + _window.offset + Math.atan( 1 / w );
-					endAngle = sector.endAngle - (Math.atan( 2 /*sector border weight*/ / w ) + _window.offset + Math.atan( 1 / w ));
+					startAngle  = startAngle - _window.offset/2 + Math.atan( 1 / w );
+					endAngle = endAngle + _window.offset/2 - Math.atan( 1 / w );
 
-					if(_window.hasSpace === undefined){
+					_window.hasSpace = false;
 
-						_window.hasSpace = false;
+					_window.groups = {};
 
-						_window.groups = {};
+					_window.matchQuery = 0;
 
-						_window.matchQuery = 0;
+					angular.forEach(_window.molecules, function(molecule, moleculeId) {
 
-						angular.forEach(_window.molecules, function(molecule, moleculeId) {
+						if(molecule.color === undefined){
+							molecule.color = this.colors.molecule;
+						}
 
-							if(molecule.color === undefined){
-								molecule.color = this.colors.molecule;
-							}
+						if(_window.groups['_' + molecule.color] === undefined){
+							_window.groups['_' + molecule.color] = {startAngle: 0, endAngle: 0, molecules: []};
+						}
 
-							if(_window.groups['_' + molecule.color] === undefined){
-								_window.groups['_' + molecule.color] = {startAngle: 0, endAngle: 0, molecules: []};
-							}
+						molecule.matchQuery = function(query){
+							return query === undefined || query.length == 0 || typeof eval(query) !== 'boolean' || eval(query);
+						}.call(util.clone(molecule.data), this.data.query);
 
-							molecule.matchQuery = function(query){
-								return query === undefined || query.length == 0 || eval(query);
-							}.call(molecule.data, this.data.query);
+						if(molecule.matchQuery){
+							_window.matchQuery++;
+							sector.matchQuery++;
+						}
 
-							if(molecule.matchQuery){
-								_window.matchQuery++;
-								sector.matchQuery++;
-							}
-
-							_window.groups['_' + molecule.color].molecules.push(moleculeId);
-						}, this);
-
-					}
+						_window.groups['_' + molecule.color].molecules.push(moleculeId);
+					}, this);
 
 					var _startAngle = startAngle;
 					
@@ -414,17 +696,15 @@ angular.module( 'vismining-evowave', [] )
 
 				this.cleanMoleculeGroup(sectorId, windowId, moleculeGroupId);
 
-				var sector = this.data.sectors[sectorId];
+				var sector = this.sectors[sectorId];
 				var _window = sector.windows[windowId];
 				var moleculeGroup = _window.groups[moleculeGroupId];
 
-				var offset = 2;
-
-				var w = this.smallestRadius + ((_window.position-1)*this.data.window.size) + (this.data.window.size/2);
+				var w = this.smallestRadius + ((_window.position-1)*this.data.window.size);
 				var startAngle = moleculeGroup.startAngle;
 				var endAngle = moleculeGroup.endAngle;
-				var biggestRadius = (((_window.position * this.data.window.size) + this.smallestRadius - offset));
-				var smallestRadius = (((Math.max(0, _window.position-1) * this.data.window.size) + this.smallestRadius + offset))
+				var biggestRadius = w + this.data.window.size;
+				var smallestRadius = w;
 
 				
 				if(_window.matchQuery > 0){
@@ -432,14 +712,15 @@ angular.module( 'vismining-evowave', [] )
 					endAngle -= matchQueryAngle;
 				}
 
+
 				this.buffer.fill(this.buffer.unhex(moleculeGroupId.replace('_','')));
-				this.buffer.stroke(this.buffer.unhex(moleculeGroupId.replace('_','')));
+				this.buffer.noStroke();
 				this.fillSector(startAngle, endAngle, biggestRadius, smallestRadius);
 
 				
 				if(_window.matchQuery > 0){
-					this.buffer.fill(200);
-					this.buffer.stroke(200);
+					this.buffer.fill(this.buffer.unhex(this.colors.matchQuery));
+					this.buffer.noStroke();
 					this.fillSector(endAngle, endAngle + matchQueryAngle, biggestRadius, smallestRadius);
 				}
 				
@@ -447,29 +728,27 @@ angular.module( 'vismining-evowave', [] )
 
 			this.cleanMoleculeGroup = function(sectorId, windowId, moleculeGroupId) {
 
-				var sector = this.data.sectors[sectorId];
+				var sector = this.sectors[sectorId];
 				var _window = sector.windows[windowId];
 				var moleculeGroup = _window.groups[moleculeGroupId];
 
-				var offset = 2;
+				var w = this.smallestRadius + ((_window.position-1)*this.data.window.size);
+				var startAngle = moleculeGroup.startAngle;
+				var endAngle = moleculeGroup.endAngle;
+				var biggestRadius = w + this.data.window.size;
+				var smallestRadius = w;
 
-				var w = this.smallestRadius + ((_window.position-1)*this.data.window.size) + (this.data.window.size/2);
-				var startAngle = moleculeGroup.startAngle + (Math.atan( 2/*sector border weight*/ / w ));
-				var endAngle = moleculeGroup.endAngle - (Math.atan( 2/*sector border weight*/ / w ));
-				var biggestRadius = (((_window.position * this.data.window.size) + this.smallestRadius - offset));
-				var smallestRadius = (((Math.max(0, _window.position-1) * this.data.window.size) + this.smallestRadius + offset))
-
-
-				this.buffer.fill(255);
-				this.buffer.stroke(255);
+				this.buffer.fill(this.buffer.unhex(this.colors.background));
+				this.buffer.noStroke();
 				this.fillSector(startAngle, endAngle, biggestRadius, smallestRadius);
+
 			};
 
 			this.drawMolecule = function(sectorId, windowId, moleculeId) {
 
 				this.cleanMolecule(sectorId, windowId, moleculeId);
 
-				var sector = this.data.sectors[sectorId];
+				var sector = this.sectors[sectorId];
 				var _window = sector.windows[windowId];
 				var molecule = _window.molecules[moleculeId];
 
@@ -479,8 +758,8 @@ angular.module( 'vismining-evowave', [] )
 
 				if(!molecule.matchQuery){
 					this.buffer.strokeWeight(1);
-					this.buffer.fill(255);
-					this.buffer.stroke(200);
+					this.buffer.fill(this.buffer.unhex(this.colors.background));
+					this.buffer.stroke(this.buffer.unhex(this.colors.matchQuery));
 				} else {
 					this.buffer.strokeWeight(1);
 					this.buffer.fill(this.buffer.unhex(molecule.color));
@@ -489,12 +768,13 @@ angular.module( 'vismining-evowave', [] )
 				
 				this.buffer.ellipse(	molecule.position.x,
 										molecule.position.y,
-										this.data.window.size-1, 
-										this.data.window.size-1);
+										this.data.window.size-3, 
+										this.data.window.size-3);
 			};
 
 			this.cleanMolecule = function(sectorId, windowId, moleculeId) {
-				var sector = this.data.sectors[sectorId];
+				
+				var sector = this.sectors[sectorId];
 				var _window = sector.windows[windowId];
 				var molecule = _window.molecules[moleculeId];
 
@@ -502,55 +782,50 @@ angular.module( 'vismining-evowave', [] )
 					molecule.color = this.colors.molecule;
 				}
 
-				this.buffer.fill(255);
+				this.buffer.fill(this.buffer.unhex(this.colors.background));
 				this.buffer.noStroke();
 
 				this.buffer.ellipse(	molecule.position.x,
 										molecule.position.y,
-										this.data.window.size-1, 
-										this.data.window.size-1);
+										this.data.window.size-3, 
+										this.data.window.size-3);
+
 			};
 
 			this.reset = function() {
 
-				if(this.data === undefined){
-					this.buffer.fill(this.buffer.unhex(this.colors.messages));
-					this.buffer.text(this.messages.noDataFound, (this.buffer.width - this.textWidth(this.messages.noDataFound))/2, this.buffer.height/2);
-				} else {
+				this.clean();
 
-					this.clean();
-					
-					this.buffer.noFill();
-					this.buffer.stroke(this.buffer.unhex(this.colors.guidelines));
-					this.buffer.strokeWeight(1);
-					this.buffer.arc((this.buffer.width/2), (this.buffer.width/2), (this.biggestRadius*2),  (this.biggestRadius*2), 0, Math.PI * 2);
+				this.buffer.noFill();
+				this.buffer.stroke(this.buffer.unhex(this.colors.guidelines));
+				this.buffer.strokeWeight(1);
+				this.buffer.arc((this.buffer.width/2), (this.buffer.width/2), (this.biggestRadius*2),  (this.biggestRadius*2), 0, Math.PI * 2);
 
-					this.biggestRadius -= 3;
+				this.biggestRadius -= 3;
 
-					this.buffer.noFill();
-					this.buffer.stroke(this.buffer.unhex(this.colors.guidelines));
-					this.buffer.strokeWeight(1);
-					this.buffer.arc((this.buffer.width/2), (this.buffer.width/2), (this.biggestRadius*2),  (this.biggestRadius*2), 0, Math.PI * 2);
+				this.buffer.noFill();
+				this.buffer.stroke(this.buffer.unhex(this.colors.guidelines));
+				this.buffer.strokeWeight(1);
+				this.buffer.arc((this.buffer.width/2), (this.buffer.width/2), (this.biggestRadius*2),  (this.biggestRadius*2), 0, Math.PI * 2);
 
-					this.buffer.noFill();
-					this.buffer.stroke(this.buffer.unhex(this.colors.guidelines));
-					this.buffer.strokeWeight(1);
-					this.buffer.arc((this.buffer.width/2), (this.buffer.width/2), (this.smallestRadius*2), (this.smallestRadius*2), 0, Math.PI * 2);
+				this.buffer.noFill();
+				this.buffer.stroke(this.buffer.unhex(this.colors.guidelines));
+				this.buffer.strokeWeight(1);
+				this.buffer.arc((this.buffer.width/2), (this.buffer.width/2), (this.smallestRadius*2), (this.smallestRadius*2), 0, Math.PI * 2);
 
-					this.biggestRadius -= 4;
-					this.smallestRadius += 4;
-				}
-
-				
+				this.biggestRadius -= 1;
+				this.smallestRadius += 1;
 				
 			};
 
 			this.clean = function() {
-				this.buffer.background(this.buffer.unhex(this.colors.background));
+				this.buffer.background(this.buffer.unhex(this.colors.background_canvas));
+				this.buffer.background(this.buffer.unhex(this.colors.background_canvas));
 			};
 
 
 			this.updateMouseTracker = function() {
+		
 				if(this.mouseTracker !== undefined) {
 					delete this.mouseTracker.previously;
 				}
@@ -602,7 +877,7 @@ angular.module( 'vismining-evowave', [] )
 
 				var windowPosition = Math.min(this.data.window.amount, Math.max(0, Math.ceil((this.mouseTracker.radius - this.smallestRadius) / this.data.window.size)));
 				
-				angular.forEach(this.data.sectors, function(sector, sectorId){
+				angular.forEach(this.sectors, function(sector, sectorId){
 					if(this.mouseTracker.angle >= sector.startAngle && this.mouseTracker.angle <= sector.endAngle){
 						this.mouseTracker.sector = sectorId;
 						angular.forEach(sector.windows, function(_window, windowId){
@@ -630,87 +905,11 @@ angular.module( 'vismining-evowave', [] )
 					}
 				}, this);
 
+				this.onMouseTrackerUpdatedHandler(this.mouseTracker);
+
 			};
 
-			this.updateSelectionTracker = function() {
-				if(this.selectionTracker === undefined){
-					this.selectionTracker = { selections: {} };
-				}
-
-				if(this.mouseTracker.window !== undefined){
-					
-					var currentSelection = {sector: this.mouseTracker.sector, window: this.mouseTracker.window};
-					var removeSelectionSector;
-
-					angular.forEach(this.selectionTracker.selections, function(selection, selectionSector) {
-						if((selection.max.sector === currentSelection.sector && selection.max.window === currentSelection.window) || (selection.min.sector === currentSelection.sector && selection.min.window === currentSelection.window)){
-							removeSelectionSector = selectionSector;
-						}
-					}, this);
-
-					if(false/*removeSelectionSector !== undefined*/){
-						var previouslySelection = this.selectionTracker.selections[removeSelectionSector].min;
-
-						if(this.selectionTracker.selections[removeSelectionSector].min.window === currentSelection.window){
-							previouslySelection = this.selectionTracker.selections[removeSelectionSector].max;
-						}
-
-						if(previouslySelection.window !== currentSelection.window) {
-							this.selectionTracker.previously = previouslySelection;
-						}
-
-						delete this.selectionTracker.selections[removeSelectionSector];
-					} else {
-
-						if(this.selectionTracker.previously === undefined){
-
-							var sectorAlreadySelected = false;
-
-							angular.forEach(this.selectionTracker.selections, function(selection, selectionSector) {
-								if(selection.max.sector === currentSelection.sector){
-									sectorAlreadySelected = true;
-								}
-							}, this);
-
-							if(!sectorAlreadySelected){
-
-								if(
-									this.selectionTracker.min === undefined || 
-									this.selectionTracker.max === undefined || 
-									(this.data.sectors[currentSelection.sector].windows[currentSelection.window].position <= this.data.sectors[this.selectionTracker.max.sector].windows[this.selectionTracker.max.window].position &&
-									this.data.sectors[currentSelection.sector].windows[currentSelection.window].position >= this.data.sectors[this.selectionTracker.min.sector].windows[this.selectionTracker.min.window].position)
-								){ 
-									this.selectionTracker.previously = {sector: this.mouseTracker.sector, window: this.mouseTracker.window};
-								}
-
-							}
-
-						} else {
-
-							if(this.selectionTracker.selections[currentSelection.sector] !== undefined || currentSelection.sector !== this.selectionTracker.previously.sector) {
-								return;
-							}
-
-							var selectionMin = this.selectionTracker.previously;
-							var selectionMax = currentSelection;
-
-							if(this.data.sectors[selectionMin.sector].windows[selectionMin.window].position > this.data.sectors[selectionMax.sector].windows[selectionMax.window].position) {
-								selectionMin = currentSelection;
-								selectionMax = this.selectionTracker.previously;
-							}
-
-							this.selectionTracker.max = selectionMax;
-							this.selectionTracker.min = selectionMin;
-
-							this.selectionTracker.selections[this.mouseTracker.sector] = {min: selectionMin, max: selectionMax};
-							delete this.selectionTracker.previously;
-
-						}
-					}
-				}
-			};
-
-			this.makeDirty = function(sectorId, windowId, moleculeId) {
+			this.makeDirty = function(sectorId, windowId, moleculeId, moleculeGroupId) {
 				
 				if(sectorId === undefined) {
 					return;
@@ -725,11 +924,15 @@ angular.module( 'vismining-evowave', [] )
 				}
 
 				if(windowId !== undefined && this.dirty[sectorId].windows[windowId] === undefined) {
-					this.dirty[sectorId].windows[windowId] = { molecules: {} };
+					this.dirty[sectorId].windows[windowId] = { molecules: {}, moleculeGroups: {} };
 				}
 
 				if(moleculeId !== undefined && this.dirty[sectorId].windows[windowId].molecules[moleculeId] === undefined) {
 					this.dirty[sectorId].windows[windowId].molecules[moleculeId] = 'dirty';
+				}
+
+				if(moleculeId !== undefined && this.dirty[sectorId].windows[windowId].moleculeGroups[moleculeGroupId] === undefined) {
+					this.dirty[sectorId].windows[windowId].moleculeGroups[moleculeGroupId] = 'dirty';
 				}
 
 			};
@@ -799,13 +1002,82 @@ angular.module( 'vismining-evowave', [] )
 				this.redraw();
 			};
 
-			this.mouseMoved = function() {				
+			this.drawWindowGuideline = function() {
+
+				var windowPosition = Math.ceil((this.mouseTracker.radius - this.smallestRadius) / this.data.window.size);
+				
+				if(this.mouseTracker.previously !== undefined){
+
+					var previouslyWindowPosition = Math.ceil((this.mouseTracker.previously.radius - this.smallestRadius) / this.data.window.size);
+
+					if(windowPosition == previouslyWindowPosition) {
+						return;
+					}
+				
+
+					if(this.mouseTracker.previously.sector !== undefined && (previouslyWindowPosition > 0 && previouslyWindowPosition <= this.data.window.amount)){
+						for(i = 0; i < this.sectors.length; i++){
+
+							var sector = this.sectors[i];
+
+							var windowPositionPreviously = Math.min(this.data.window.amount, Math.max(0, Math.ceil((this.mouseTracker.previously.radius - this.smallestRadius) / this.data.window.size)));
+
+							var w = this.smallestRadius + ((windowPositionPreviously-1)*this.data.window.size);
+
+							var startAngle = sector.startAngle + (Math.atan( 2/*sector border weight*/ / (w + (this.data.window.size/2)) ));
+							var endAngle = sector.endAngle - (Math.atan( 2/*sector border weight*/ / (w + (this.data.window.size/2)) ));
+
+							var result = {};
+
+							var hasWindow = sector.windows.some(function(_window, windowId){
+								if(_window.position === windowPositionPreviously){
+									this.windowId = windowId;
+									return true;
+								}
+							}, result);
+
+							if(hasWindow){
+								this.makeDirty(i, result.windowId);	
+							} else {
+								this.buffer.fill(this.buffer.unhex(sector.background));
+								this.buffer.noStroke();
+								this.fillSector(startAngle, endAngle, (w+this.data.window.size-1), w+1);
+							}
+						}						
+					}
+
+				}
+
+				if(this.mouseTracker.sector !== undefined && (windowPosition > 0 && windowPosition <= this.data.window.amount)){
+
+					var sector = this.sectors[this.mouseTracker.sector];	
+
+					var radius = this.smallestRadius + ( windowPosition * this.data.window.size) - this.data.window.size/2;
+
+					this.buffer.noFill();
+					this.buffer.stroke(this.buffer.unhex(this.colors.window_guideline));
+					this.buffer.ellipse(this.buffer.width/2, this.buffer.height/2, radius * 2, radius * 2);
+				}
+
+				this.redraw();
+
+			};
+
+			this.mouseMoved = function() {
+				if(!this.isInitialized){
+					return;
+				}
+
 				this.updateMouseTracker();
-				this.externals.canvas.style.cursor = 'default';
-				//this.drawSelection();
+				this.externals.canvas.style.cursor = 'crosshair';
+				this.drawWindowGuideline();
 			};
 
 			this.mouseDragged = function() {
+				if(!this.isInitialized){
+					return;
+				}
+
 				if(this.mouseButton === 37) {
 					if(this.mouseTracker === undefined){
 						this.updateMouseTracker();
@@ -818,105 +1090,110 @@ angular.module( 'vismining-evowave', [] )
 				}
 			};
 
-			this.mousePressed = function() {
-				this.updateMouseTracker();
-				console.log(this.mouseTracker);
-				/*
-				if(this.mouseButton == 39) {
-					this.updateSelectionTracker();
+			this.mouseClicked = function() {
+				
+				if(!this.isInitialized){
+					return;
 				}
-				*/
+
+				this.updateMouseTracker();
+
+				var redraw = false;
+
+				if(this.mouseButton == 37 || this.mouseButton == 39){
+					if(this.mouseButton == 37) { 
+						if(this.mode === 'OVERVIEW'){
+							if(this.sector.sectors !== undefined){
+								this.mode = 'DETAILED';
+								redraw = true;
+							}
+						} else if(this.mode === 'DETAILED') {
+							this.mode = 'OVERVIEW';
+							this.sectorsZoom.push(this.sector);
+							this.sector = this.sectors[this.mouseTracker.sector];
+							redraw = true;
+						}
+					} else if(this.mouseButton == 39){
+						if(this.mode === 'DETAILED'){
+							this.mode = 'OVERVIEW';
+							redraw = true;
+						} else if(this.mode === 'OVERVIEW') {
+							if(this.sectorsZoom.length > 0){
+								this.mode = 'DETAILED';
+								this.sector = this.sectorsZoom.pop();
+								redraw = true;
+							}
+						}
+					}
+
+					if(redraw){
+						this.isInitialized = false;
+						this.background(this.unhex(this.colors.background));
+						this.loadFontInBuffer(this, this.fonts.Messages);
+						this.text(this.messages.loading, this.width/2 - (this.textWidth(this.messages.loading)/2), this.height/2);
+						var context = this;
+						window.setTimeout(function(){context.init()}, 10);
+					}						
+				}
+				
 			};
 
 			this.mouseReleased = function() {
+				if(!this.isInitialized){
+					return;
+				}
+
 				this.updateMouseTracker();
-			};
+			};	
 
 		};
 
-	})
+	}]);
 
-	.directive('evowave', ['evowave', function(evowave) {
+	vismining.value('evowave', undefined);
+
+	vismining.directive('evowave', ['evowave-algorithm', 'evowave-filters', 'evowave-utilities', function(algorithm, filters, util) {
 		return {
 			restrict: 'E',
 			scope: {
-				data: '='
+				data: '=',
+				handler: '='
 			},
 			templateUrl: 'template/vismining/evowave.html',
 			link: function($scope, $element, attrs) {
 				var $canvas = $element.find('canvas');
 				var canvas = $canvas[0];
 
-				evowave.data = $scope.data;
-				/*
-				evowave.data = { 
-					query: "this.event.type == 'added'",
-					window: { size: 5, amount: 50, mode: 'GLOBAL' },
-					sectors: [
-						{ angle: 0.20, label: 'Sector01', 
-							windows: [ { position: 1, molecules: [ 
-								{ color: 'FFFF0000' }, { color: 'FF00FF00' }, { color: 'FF0000FF' } 
-							] } ] }, 
-						{ angle: 0.10, label: 'Sector02', 
-							windows: [ { position: 150, molecules: [
-								{ color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}, { color: 'FFFF0000'}, { color: 'FF00FF00'}, { color: 'FF0000FF'}
-							] } ] }, 
-						{ angle: 0.10, label: 'Sector03', 
-							windows: [ { position: 8, molecules: [
-								{ color: 'FFFFF5F5'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}
-							] } ] }, 
-						{ angle: 0.60, label: 'Sector04', 
-							windows: [ { position: 40, molecules: [
-								{ color: 'FFFF0000'}, { color: 'FF0000FF'}, { color: 'FF0000FF'}, { color: 'FF0000FF'}, { color: 'FF0000FF'}, { color: 'FF0000FF'}, { color: 'FF0000FF'}, { color: 'FF0000FF'}, { color: 'FF0000FF'}, { color: 'FF0000FF'}, { color: 'FF0000FF'}, { color: 'FF0000FF'}, { color: 'FF0000FF'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'} ] }
-								, { position: 42, molecules: [
-									{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }
-								, { position: 41, molecules: [
-									{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }
-								, { position: 11, molecules: [
-									{ color: 'FF0000FF', data: { event: { type: 'added' } } }, { color: 'FF0000FF'}, { color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF', data: { event: { type: 'added' } } },{ color: 'FF0000FF', data: { event: { type: 'added' } } },{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF', data: { event: { type: 'added' } } },{ color: 'FF0000FF', data: { event: { type: 'added' } } },{ color: 'FF0000FF', data: { event: { type: 'added' } } },{ color: 'FF0000FF'},{ color: 'FF0000FF', data: { event: { type: 'added' } } },{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF', data: { event: { type: 'added' } } },{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF', data: { event: { type: 'added' } } },{ color: 'FF0000FF', data: { event: { type: 'added' } } },{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF', data: { event: { type: 'added' } } },{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FFFF0000', data: { event: { type: 'added' } } }, { color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }
-								, { position: 12, molecules: [
-									{ color: 'FFFF0000', data: { event: { type: 'added' } } }, { color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000', data: { event: { type: 'added' } } },{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }
-								, { position: 13, molecules: [
-									{ color: 'FFFF0000'}, { color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }
-								, { position: 14, molecules: [
-									{ color: 'FFFF0000'}, { color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }
-								, { position: 15, molecules: [
-									{ color: 'FFFF0000'}, { color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }
-								, { position: 16, molecules: [
-									{ color: 'FFFF0000'}, { color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }
-								, { position: 17, molecules: [
-									{ color: 'FFFF0000'}, { color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }
-								, { position: 18, molecules: [
-									{ color: 'FFFF0000'}, { color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }
-								, { position: 19, molecules: [
-									{ color: 'FFFF0000'}, { color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }
-								, { position: 20, molecules: [
-									{ color: 'FFFF0000'}, { color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }
-								, { position: 21, molecules: [
-									{ color: 'FFFF0000', data: { event: { type: 'added' } } }, { color: 'FFFF0000'}, { color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}, { color: 'FFFF0000'}, { color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'}] }
-								, { position: 30, molecules: [
-									{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FFAAD6A5'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FF0000FF'},{ color: 'FFFF0000'}, { color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'},{ color: 'FFFF0000'} 
-									] } ] } ] };
-				*/
-				
-				evowave.data = { window: { size: 5, amount: 164, mode: 'LOCAL' }, sectors: [ { angle: 1, label: 'default', windows: [ { position: 1, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 2, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 3, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 4, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 5, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 6, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 7, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 8, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 9, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 10, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 11, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 12, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 13, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 14, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 15, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 16, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 17, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 18, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 19, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 20, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 21, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 22, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFe67940' }, { color: 'FFe67940' }, { color: 'FFe67940' }, { color: 'FFe67940' }, { color: 'FFe67940' }, { color: 'FFe67940' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFe67940' }, { color: 'FFe67940' }, { color: 'FFe67940' }, { color: 'FFe67940' }, { color: 'FFe67940' }, { color: 'FFe67940' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 23, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 24, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 25, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 26, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 27, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 28, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 29, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 30, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 31, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 32, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 33, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 34, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFd44d69' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 35, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 36, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 37, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 38, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFd44d69' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFd44d69' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 39, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 40, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 41, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 42, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 43, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 44, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 45, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 46, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 47, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 48, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 49, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 50, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 51, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 52, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 53, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 54, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 55, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 56, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 58, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 59, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 60, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 61, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 62, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 63, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 64, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 65, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 66, molecules: [ { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' }, { color: 'FFa90471' } ] }, { position: 67, molecules: [ { color: 'FF9fae46' }, { color: 'FF2a5118' }, { color: 'FF2a5118' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF51f9d0' } ] }, { position: 68, molecules: [ { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' } ] }, { position: 69, molecules: [ { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' } ] }, { position: 70, molecules: [ { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' } ] }, { position: 71, molecules: [ { color: 'FF5ff2a8' } ] }, { position: 72, molecules: [ { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' } ] }, { position: 73, molecules: [ { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FFa90471' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FFa90471' } ] }, { position: 74, molecules: [ { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' } ] }, { position: 75, molecules: [ { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' } ] }, { position: 76, molecules: [ { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' } ] }, { position: 77, molecules: [ { color: 'FF5ff2a8' }, { color: 'FFd7a7c3' }, { color: 'FFd7a7c3' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' } ] }, { position: 78, molecules: [ { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FFf1a171' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FFd7a7c3' }, { color: 'FFd7a7c3' }, { color: 'FFd7a7c3' }, { color: 'FF9fae46' }, { color: 'FF51f9d0' }, { color: 'FFd7a7c3' }, { color: 'FFd7a7c3' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF19a318' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FFf1a171' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FFd7a7c3' }, { color: 'FFd7a7c3' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' } ] }, { position: 79, molecules: [ { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF2a5118' }, { color: 'FF5ff2a8' }, { color: 'FFf1a171' }, { color: 'FF19a318' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' } ] }, { position: 80, molecules: [ { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF5ff2a8' }, { color: 'FF6839f7' }, { color: 'FF5ff2a8' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF2a148b' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FFf1a171' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' } ] }, { position: 81, molecules: [ { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FFf1a171' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF2a41a8' }, { color: 'FF2a41a8' }, { color: 'FFd7a7c3' }, { color: 'FFd7a7c3' }, { color: 'FFd7a7c3' }, { color: 'FFd7a7c3' }, { color: 'FFd7a7c3' }, { color: 'FFd7a7c3' }, { color: 'FFd7a7c3' }, { color: 'FFd7a7c3' }, { color: 'FFd7a7c3' }, { color: 'FF2a41a8' }, { color: 'FF2a41a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' } ] }, { position: 82, molecules: [ { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FFf1a171' }, { color: 'FF2a41a8' }, { color: 'FF2a41a8' }, { color: 'FF2a41a8' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FFf1a171' } ] }, { position: 83, molecules: [ { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FFf1a171' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' } ] }, { position: 84, molecules: [ { color: 'FFf1a171' }, { color: 'FF9fae46' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FF9fae46' }, { color: 'FF2a5118' }, { color: 'FF2a5118' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' } ] }, { position: 85, molecules: [ { color: 'FF9fae46' }, { color: 'FF19a318' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FFf1a171' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FFf1a171' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' } ] }, { position: 86, molecules: [ { color: 'FF5ff2a8' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF19a318' }, { color: 'FF9fae46' }, { color: 'FF19a318' }, { color: 'FFf1a171' }, { color: 'FF9fae46' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FFf1a171' } ] }, { position: 87, molecules: [ { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' } ] }, { position: 88, molecules: [ { color: 'FF5ff2a8' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF9fae46' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF2a41a8' }, { color: 'FF2a41a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' } ] }, { position: 89, molecules: [ { color: 'FF5ff2a8' }, { color: 'FFf1a171' }, { color: 'FF9fae46' }, { color: 'FF9fae46' } ] }, { position: 90, molecules: [ { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FFf1a171' }, { color: 'FF9fae46' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF4ae866' }, { color: 'FF9fae46' }, { color: 'FF19a318' }, { color: 'FFf1a171' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FFf1a171' }, { color: 'FF5ff2a8' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FFf1a171' } ] }, { position: 91, molecules: [ { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF6839f7' }, { color: 'FF19a318' }, { color: 'FF9fae46' }, { color: 'FF9fae46' } ] }, { position: 92, molecules: [ { color: 'FF7306d1' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF7306d1' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' } ] }, { position: 93, molecules: [ { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' } ] }, { position: 94, molecules: [ { color: 'FFd7a7c3' }, { color: 'FFd7a7c3' }, { color: 'FFd7a7c3' }, { color: 'FF19a318' }, { color: 'FF19a318' }, { color: 'FF9fae46' }, { color: 'FF4ae866' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF4ae866' } ] }, { position: 95, molecules: [ { color: 'FF19a318' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FFf1a171' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' } ] }, { position: 96, molecules: [ { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' } ] }, { position: 97, molecules: [ { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' } ] }, { position: 98, molecules: [ { color: 'FFf1a171' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FFf1a171' } ] }, { position: 99, molecules: [ { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF19a318' }, { color: 'FF5ff2a8' }, { color: 'FF3f273b' }, { color: 'FF19a318' } ] }, { position: 100, molecules: [ { color: 'FF5ff2a8' }, { color: 'FFbc279d' }, { color: 'FFf1a171' }, { color: 'FFbc279d' }, { color: 'FFbc279d' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF6839f7' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FFbc279d' }, { color: 'FFbc279d' }, { color: 'FF6839f7' }, { color: 'FF6839f7' }, { color: 'FF6839f7' }, { color: 'FF6839f7' }, { color: 'FF6839f7' }, { color: 'FF9fae46' }, { color: 'FF9fae46' } ] }, { position: 101, molecules: [ { color: 'FF9fae46' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF6839f7' } ] }, { position: 102, molecules: [ { color: 'FF9fae46' }, { color: 'FF19a318' }, { color: 'FF9fae46' }, { color: 'FF4ae866' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FFbc279d' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF4ae866' } ] }, { position: 103, molecules: [ { color: 'FF4ae866' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FFf1a171' }, { color: 'FF7306d1' }, { color: 'FF5ff2a8' } ] }, { position: 104, molecules: [ { color: 'FF6839f7' }, { color: 'FF6839f7' }, { color: 'FF7306d1' }, { color: 'FF5ff2a8' }, { color: 'FF6839f7' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF19a318' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF4ae866' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FFbc279d' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' } ] }, { position: 105, molecules: [ { color: 'FF4ae866' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF7306d1' }, { color: 'FF5ff2a8' }, { color: 'FF4ae866' }, { color: 'FF19a318' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF5ff2a8' } ] }, { position: 106, molecules: [ { color: 'FF9fae46' }, { color: 'FF7306d1' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF7306d1' } ] }, { position: 107, molecules: [ { color: 'FF6839f7' }, { color: 'FF6839f7' }, { color: 'FF6839f7' }, { color: 'FFf1a171' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF6839f7' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF7306d1' }, { color: 'FF7306d1' } ] }, { position: 108, molecules: [ { color: 'FF3f273b' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' } ] }, { position: 109, molecules: [ { color: 'FF4ae866' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF9fae46' }, { color: 'FF4ae866' }, { color: 'FF9fae46' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF9fae46' }, { color: 'FF4ae866' } ] }, { position: 110, molecules: [ { color: 'FF5ff2a8' }, { color: 'FFbc279d' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF3f273b' } ] }, { position: 111, molecules: [ { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF7306d1' }, { color: 'FF9fae46' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF19a318' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF5ff2a8' } ] }, { position: 112, molecules: [ { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' } ] }, { position: 113, molecules: [ { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF9fae46' }, { color: 'FF7306d1' }, { color: 'FF9fae46' } ] }, { position: 114, molecules: [ { color: 'FF5ff2a8' }, { color: 'FFb6677f' }, { color: 'FFb6677f' }, { color: 'FFf1a171' }, { color: 'FF7306d1' }, { color: 'FF5ff2a8' }, { color: 'FF7306d1' } ] }, { position: 115, molecules: [ { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF5ff2a8' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF7306d1' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF7306d1' } ] }, { position: 116, molecules: [ { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF6839f7' }, { color: 'FF9fae46' } ] }, { position: 117, molecules: [ { color: 'FF3f273b' }, { color: 'FF7306d1' }, { color: 'FF7306d1' } ] }, { position: 118, molecules: [ { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF19a318' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF5ff2a8' }, { color: 'FF7306d1' }, { color: 'FF3f273b' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FFf1a171' }, { color: 'FF19a318' } ] }, { position: 119, molecules: [ { color: 'FF20737c' }, { color: 'FF20737c' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF20737c' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF7306d1' }, { color: 'FF20737c' } ] }, { position: 120, molecules: [ { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF4ae866' }, { color: 'FF6839f7' }, { color: 'FF5ff2a8' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' } ] }, { position: 121, molecules: [ { color: 'FF4ae866' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF7306d1' }, { color: 'FF19a318' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF7306d1' }, { color: 'FF6839f7' }, { color: 'FF6839f7' }, { color: 'FF9fae46' } ] }, { position: 122, molecules: [ { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF4ae866' }, { color: 'FF19a318' } ] }, { position: 123, molecules: [ { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF6839f7' }, { color: 'FF4ae866' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF6839f7' }, { color: 'FF6839f7' } ] }, { position: 124, molecules: [ { color: 'FF9fae46' }, { color: 'FF6839f7' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF20737c' }, { color: 'FF20737c' }, { color: 'FF20737c' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF4ae866' } ] }, { position: 125, molecules: [ { color: 'FF9fae46' }, { color: 'FF6839f7' }, { color: 'FFb6677f' }, { color: 'FFb6677f' }, { color: 'FFb6677f' }, { color: 'FFb6677f' }, { color: 'FF9fae46' }, { color: 'FF20737c' } ] }, { position: 126, molecules: [ { color: 'FF6839f7' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF6839f7' } ] }, { position: 127, molecules: [ { color: 'FF6839f7' }, { color: 'FF6839f7' }, { color: 'FF7306d1' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' } ] }, { position: 128, molecules: [ { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF7306d1' } ] }, { position: 129, molecules: [ { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF7306d1' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF7306d1' } ] }, { position: 130, molecules: [ { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF5ff2a8' }, { color: 'FF6839f7' }, { color: 'FF6839f7' }, { color: 'FF6839f7' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' } ] }, { position: 131, molecules: [ { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' } ] }, { position: 132, molecules: [ { color: 'FF6839f7' }, { color: 'FF6839f7' }, { color: 'FF6839f7' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF7306d1' }, { color: 'FF5ff2a8' } ] }, { position: 133, molecules: [ { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF9fae46' } ] }, { position: 134, molecules: [ { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' } ] }, { position: 135, molecules: [ { color: 'FF7306d1' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' } ] }, { position: 137, molecules: [ { color: 'FF20737c' } ] }, { position: 138, molecules: [ { color: 'FF5ff2a8' } ] }, { position: 139, molecules: [ { color: 'FF6839f7' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF7306d1' }, { color: 'FF7306d1' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FFf1a171' }, { color: 'FFf1a171' } ] }, { position: 140, molecules: [ { color: 'FF5ff2a8' }, { color: 'FFf1a171' }, { color: 'FF5ff2a8' }, { color: 'FFf1a171' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FF4512f6' } ] }, { position: 141, molecules: [ { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FFa610e5' }, { color: 'FFa610e5' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FF9fae46' }, { color: 'FF9fae46' } ] }, { position: 142, molecules: [ { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FFa610e5' }, { color: 'FFa610e5' }, { color: 'FFa610e5' }, { color: 'FFa610e5' }, { color: 'FFa610e5' }, { color: 'FFa610e5' }, { color: 'FFa610e5' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FFa610e5' }, { color: 'FFa610e5' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FFa610e5' }, { color: 'FFa610e5' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FFa610e5' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' } ] }, { position: 143, molecules: [ { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF6839f7' }, { color: 'FF6839f7' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FFa610e5' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FFa610e5' }, { color: 'FFa610e5' }, { color: 'FFa610e5' }, { color: 'FFa610e5' }, { color: 'FF5ff2a8' } ] }, { position: 144, molecules: [ { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' } ] }, { position: 145, molecules: [ { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF984841' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF6839f7' }, { color: 'FF6839f7' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' } ] }, { position: 146, molecules: [ { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF4ae866' } ] }, { position: 147, molecules: [ { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF984841' }, { color: 'FF984841' }, { color: 'FF984841' }, { color: 'FF984841' }, { color: 'FF984841' }, { color: 'FFf1a171' }, { color: 'FF9fae46' }, { color: 'FF984841' }, { color: 'FF984841' } ] }, { position: 148, molecules: [ { color: 'FF5ff2a8' }, { color: 'FF984841' }, { color: 'FF984841' }, { color: 'FF984841' }, { color: 'FF984841' } ] }, { position: 149, molecules: [ { color: 'FF984841' }, { color: 'FF984841' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF984841' }, { color: 'FF984841' }, { color: 'FF984841' }, { color: 'FF984841' }, { color: 'FF984841' }, { color: 'FFa610e5' }, { color: 'FF4ae866' }, { color: 'FF4ae866' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' } ] }, { position: 150, molecules: [ { color: 'FF5ff2a8' }, { color: 'FF9e7e4e' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF984841' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF984841' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' } ] }, { position: 151, molecules: [ { color: 'FF984841' }, { color: 'FF984841' }, { color: 'FF984841' }, { color: 'FF984841' }, { color: 'FF984841' }, { color: 'FF984841' }, { color: 'FF984841' } ] }, { position: 152, molecules: [ { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FFa610e5' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FFbef6b0' }, { color: 'FFbef6b0' }, { color: 'FFbef6b0' }, { color: 'FFbef6b0' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' } ] }, { position: 153, molecules: [ { color: 'FF6839f7' }, { color: 'FF6839f7' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FFf1a171' }, { color: 'FF984841' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF5ff2a8' } ] }, { position: 154, molecules: [ { color: 'FFf1a171' }, { color: 'FF5ff2a8' }, { color: 'FF984841' }, { color: 'FFbef6b0' }, { color: 'FFbef6b0' }, { color: 'FFbef6b0' }, { color: 'FF5ff2a8' } ] }, { position: 155, molecules: [ { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FFa826fb' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' } ] }, { position: 156, molecules: [ { color: 'FFbef6b0' }, { color: 'FF6839f7' }, { color: 'FFbef6b0' } ] }, { position: 157, molecules: [ { color: 'FF5ff2a8' } ] }, { position: 158, molecules: [ { color: 'FF9fae46' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' } ] }, { position: 159, molecules: [ { color: 'FFbef6b0' }, { color: 'FFbef6b0' }, { color: 'FFbef6b0' }, { color: 'FFbef6b0' }, { color: 'FFbef6b0' }, { color: 'FF5ff2a8' }, { color: 'FF20737c' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' } ] }, { position: 160, molecules: [ { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FFbef6b0' }, { color: 'FFbef6b0' }, { color: 'FFbef6b0' }, { color: 'FFbef6b0' }, { color: 'FFbef6b0' }, { color: 'FFbef6b0' }, { color: 'FF9fae46' } ] }, { position: 161, molecules: [ { color: 'FFf1a171' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF6839f7' } ] }, { position: 163, molecules: [ { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' }, { color: 'FF5ff2a8' } ] }, { position: 164, molecules: [ { color: 'FF9fae46' }, { color: 'FF9fae46' }, { color: 'FF9fae46' } ] } ] } ] } ;
+				canvas.width = $element.parent()[0].clientWidth;
+				canvas.height = $element.parent()[0].clientHeight;
 
-
-				$canvas.attr('width', $element.parent()[0].clientWidth);
-
-				$canvas.attr('height', $element.parent()[0].clientHeight);
-
-				new Processing(canvas, function(processing) {
+				var evowave = new Processing(canvas, function(processing) {
 					
-					angular.extend(processing, evowave);
+					angular.extend(processing, algorithm);
 
 					processing.setup = function() {
-						processing.size(parseInt($canvas.attr('width')), parseInt($canvas.attr('height')));
+						processing.size(canvas.width, canvas.height);
 				  		processing.noLoop();
-				  		processing.init();
 					};
 
 				});
+
+
+				evowave.onMouseTrackerUpdatedHandler = $scope.handler;
+				if($scope.data !== undefined){
+					evowave.data = util.clone($scope.data);
+					filters.data = util.clone($scope.data);
+
+					filters.starts = filters.data.starts;
+					filters.ends = filters.data.ends;
+
+					evowave.data = filters.groupWindowsInDays(120);
+
+					//evowave.data = filters.changePeriod(moment("02/09/1998 00:00:00 +0000", "DD/MM/YYYY HH:mm:ss Z"), moment("06/09/1998 00:00:00 +0000", "DD/MM/YYYY HH:mm:ss Z"));
+				}
+				evowave.start();
+
+				vismining.value('evowave', evowave);
 
 			}
 		};
