@@ -43,6 +43,10 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 			this.groupWindowsInDays = function(days, data){
 
+				if(this.data === undefined){
+					return;
+				}
+
 				if(data === undefined){
 					data = this.data;
 				}
@@ -105,14 +109,18 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 			this.changePeriod = function(starts, ends) {
 
+				if(this.data === undefined){
+					return;
+				}
+
 				delete this.starts;
 				delete this.ends;
 
-				var cStarts = moment(this.data.period.starts, "DD/MM/YYYY HH:mm:ss Z");
-				var cEnds = moment(this.data.period.ends, "DD/MM/YYYY HH:mm:ss Z");
+				var cStarts = moment(this.data.period.starts, "DD/MM/YYYY");
+				var cEnds = moment(this.data.period.ends, "DD/MM/YYYY");
 
-				mStarts = moment(starts, "DD/MM/YYYY HH:mm:ss Z");
-				mEnds = moment(ends, "DD/MM/YYYY HH:mm:ss Z");
+				mStarts = moment(starts, "DD/MM/YYYY HH:mm:ss");
+				mEnds = moment(ends, "DD/MM/YYYY HH:mm:ss");
 
 				var daysAfter = mStarts.diff(cStarts, 'days');
 				var daysBefore = mEnds.diff(cEnds, 'days');
@@ -188,7 +196,8 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 			this.messages = {
 				noDataFound: 'No data found to display!',
-				loading: 'Loading...'
+				loading: 'Loading...',
+				tooManyData: 'The current configuration generates a visualization too big for this browser. Please, use the filters to reduce the amount of data to be analyzed.'
 			};
 
 			this.colors = {
@@ -335,13 +344,26 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 				this.biggestRadius = this.smallestRadius + ((this.data.window.amount) * this.data.window.size) + 6;
 
+				var size = (this.biggestRadius + biggestSectorLabel + 13)*2;
+
+				if(size >= 32767 || size * size >= 268435456){
+
+					this.background(this.unhex(this.colors.background_canvas));
+					this.fill(this.unhex(this.colors.messages));
+					this.text(this.messages.tooManyData, (this.width - this.textWidth(this.messages.tooManyData))/2, this.height/2);
+					return;
+				}
+
 				if(this.buffer === undefined || this.buffer.width !== (this.biggestRadius + biggestSectorLabel + 13)*2 || this.buffer.height !== (this.biggestRadius + biggestSectorLabel + 13)*2){
-					this.buffer = this.createGraphics((this.biggestRadius + biggestSectorLabel + 13)*2, (this.biggestRadius + biggestSectorLabel + 13)*2, 1);
+					this.buffer = this.createGraphics(size, size, 1);
 				}
 
 				this.center = {x: (this.buffer.width/2), y: (this.buffer.width/2)};
 
 				this.isInitialized = true;
+
+				this.biggestRadius -=4;
+				this.smallestRadius +=1;
 
 				this.draw();
 
@@ -662,7 +684,7 @@ var vismining = angular.module( 'vismining-evowave', [] );
 						}
 
 						if(_window.groups['_' + molecule.color] === undefined){
-							_window.groups['_' + molecule.color] = {startAngle: 0, endAngle: 0, molecules: []};
+							_window.groups['_' + molecule.color] = {startAngle: 0, endAngle: 0, matchQuery: 0, molecules: []};
 						}
 
 						molecule.matchQuery = function(query){
@@ -670,6 +692,7 @@ var vismining = angular.module( 'vismining-evowave', [] );
 						}.call(util.clone(molecule.data), this.data.query);
 
 						if(molecule.matchQuery){
+							_window.groups['_' + molecule.color].matchQuery++;
 							_window.matchQuery++;
 							sector.matchQuery++;
 						}
@@ -707,8 +730,8 @@ var vismining = angular.module( 'vismining-evowave', [] );
 				var smallestRadius = w;
 
 				
-				if(_window.matchQuery > 0){
-					var matchQueryAngle = (endAngle - startAngle) - (((endAngle - startAngle) * _window.matchQuery) / _window.molecules.length);
+				if(moleculeGroup.matchQuery >= 0){
+					var matchQueryAngle = (endAngle - startAngle) - (((endAngle - startAngle) * moleculeGroup.matchQuery) / moleculeGroup.molecules.length);
 					endAngle -= matchQueryAngle;
 				}
 
@@ -718,7 +741,7 @@ var vismining = angular.module( 'vismining-evowave', [] );
 				this.fillSector(startAngle, endAngle, biggestRadius, smallestRadius);
 
 				
-				if(_window.matchQuery > 0){
+				if(moleculeGroup.matchQuery >= 0){
 					this.buffer.fill(this.buffer.unhex(this.colors.matchQuery));
 					this.buffer.noStroke();
 					this.fillSector(endAngle, endAngle + matchQueryAngle, biggestRadius, smallestRadius);
@@ -795,6 +818,9 @@ var vismining = angular.module( 'vismining-evowave', [] );
 			this.reset = function() {
 
 				this.clean();
+
+				this.biggestRadius +=4;
+				this.smallestRadius -=1;
 
 				this.buffer.noFill();
 				this.buffer.stroke(this.buffer.unhex(this.colors.guidelines));
@@ -912,6 +938,7 @@ var vismining = angular.module( 'vismining-evowave', [] );
 			this.makeDirty = function(sectorId, windowId, moleculeId, moleculeGroupId) {
 				
 				if(sectorId === undefined) {
+					delete this.dirty;
 					return;
 				}
 
@@ -1155,10 +1182,6 @@ var vismining = angular.module( 'vismining-evowave', [] );
 	vismining.directive('evowave', ['evowave-algorithm', 'evowave-filters', 'evowave-utilities', function(algorithm, filters, util) {
 		return {
 			restrict: 'E',
-			scope: {
-				data: '=',
-				handler: '='
-			},
 			templateUrl: 'template/vismining/evowave.html',
 			link: function($scope, $element, attrs) {
 				var $canvas = $element.find('canvas');
@@ -1178,19 +1201,36 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 				});
 
+				$scope.$watch(attrs.groupby, function(groupby){
+					evowave.data = filters.groupWindowsInDays(groupby);
+	                evowave.start();
+	            });
 
-				evowave.onMouseTrackerUpdatedHandler = $scope.handler;
-				if($scope.data !== undefined){
-					evowave.data = util.clone($scope.data);
-					filters.data = util.clone($scope.data);
+	            $scope.$watch(attrs.query, function(query){
+					
+	            	if(evowave.data === undefined){
+						return;
+					}
+
+					evowave.data.query = query;
+					evowave.makeDirty();
+	                evowave.redraw();
+	            });
+
+				$scope.$watch(attrs.handler, function(handler){
+	                evowave.onMouseTrackerUpdatedHandler = handler;
+	            });
+
+				$scope.$watch(attrs.data, function(data){
+	                evowave.data = util.clone(data);
+					filters.data = util.clone(data);
 
 					filters.starts = filters.data.starts;
 					filters.ends = filters.data.ends;
+					
+					evowave.start();
+	            });
 
-					evowave.data = filters.groupWindowsInDays(120);
-
-					//evowave.data = filters.changePeriod(moment("02/09/1998 00:00:00 +0000", "DD/MM/YYYY HH:mm:ss Z"), moment("06/09/1998 00:00:00 +0000", "DD/MM/YYYY HH:mm:ss Z"));
-				}
 				evowave.start();
 
 				vismining.value('evowave', evowave);

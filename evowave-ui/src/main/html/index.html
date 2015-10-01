@@ -17,77 +17,74 @@
 		<style>
 			body {
 				font-family: 'Calibri';
-				font-size:12px;
-				
+				font-size:14px;
+				margin:0px;
+				width:100%;
+				height:100%;
 			}
-			.parent {
-			    display: table;
-			    table-layout: fixed;
-			}
-
-			.child {
-			    display:table-cell;
-			    vertical-align:middle;
-			    text-align:center;
-			}
-
-			.front {
+			.top-fixed {
 				position: absolute;
+				width:100%;
 				z-index: 1;
-			}
-
-			.info {
-				background-color: #000;
-				border-radius: 4px;
-				color: #fff;
-				padding: 2px 6px;
-				font-family: 'Calibri';
-				font-size:12px;
-				cursor: crosshair;
-			}
-
-			.label {
-				background-color: #eee;
-				border-radius:4px;
-				border:1px solid #ccc;
-				padding: 4px;
-				text-align:center;
-				vertical-align:middle;
-				font-size:12px;
 			}
 		</style>
 	</head>
 	
-	<body style="margin:0px;width:100%;height:100%;" ng-app="evowave-main">
-		<div ng-controller="MainEvowaveController" style="width:100%;height:100%;position: relative;vertical-align: middle; align-text:center;">
-			<div class="front" style="top:5px; left:5px;">
-				<div class="btn-group" dropdown>
-					<button id="split-button" type="button" class="btn btn-danger">jEdit</button>
-					<button type="button" class="btn btn-danger" dropdown-toggle>
-						<span class="caret"></span>
-					</button>
-					<ul class="dropdown-menu" role="menu" aria-labelledby="split-button">
-						<li role="menuitem"><a href="#">JHotDraw</a></li>
-						<li role="menuitem"><a href="#">JMonkeyEngine</a></li>
-						<li role="menuitem"><a href="#">Maven</a></li>
-					</ul>
-			    </div>
-			    <span class="label"><code>from</code> <kbd ng-click="showHideDtFrom()" style="cursor:pointer;">{{formatDate(dtFrom)}}</kbd></span>
-		    	<span class="label"><code>to</code> <kbd ng-click="showHideDtTo()" style="cursor:pointer;">{{formatDate(dtTo)}}</kbd></span>
-		    	<span class="label"><code>grouped by</code> <kbd style="cursor:pointer;">10</kbd> <code>days</code></span>
-		    	<span class="label"><code>oldest in </code><kbd style="cursor:pointer;">center</kbd></span>
-		    	<span class="label"><code>events counted</code> <kbd style="cursor:pointer;">locally</kbd></span>
-		    	<span class="label"><code>events filtered by</code> <kbd style="cursor:pointer;">this.complexity == 10</kbd></span>
-		    </div>
-		    <div class="front" style="top:40px;left:80px;">
-		    <datepicker ng-model="dtFrom" init-date="dtFrom" min-date="dtMin" max-date="dtMax" ng-show="dtFromShow" show-weeks="true" class="well well-sm"></datepicker>
-		    <datepicker ng-model="dtTo" init-date="dtTo" min-date="dtMin" max-date="dtMax" ng-show="dtToShow" show-weeks="true" class="well well-sm"></datepicker>
-		    </div>
-			<evowave data="jEdit" handler="handle" />
+	<body ng-app="evowave-main" ng-controller="MainEvowaveController">
+		<div class="top-fixed">
+			<nav class="navbar navbar-default">
+				<div class="container-fluid" style="padding:0px;">
+					<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1"  style="padding:0px;">
+						<ul class="nav navbar-nav">
+							<li class="active dropdown" dropdown on-toggle="toggled(open)">
+								<a href id="simple-dropdown" dropdown-toggle>jEdit <span class="caret"></span></a>
+								<ul class="dropdown-menu" aria-labelledby="simple-dropdown">
+									<li>
+										<a href>jHotDrawn</a>
+										<a href>jMonkeyEngine</a>
+										<a href>Maven</a>
+									</li>
+								</ul>
+							</li>
+						</ul>
+						<form class="navbar-form navbar-left">
+							<div class="input-group">
+								<span class="input-group-addon">from</span>
+								<input type="date" ng-model="_from" class="form-control" min="1998-09-27" max="2013-08-19" required />
+							</div>
+							<div class="input-group">
+								<span class="input-group-addon">to</span>
+								<input type="date" ng-model="_to" class="form-control" min="1998-09-27" max="2013-08-19" required />
+							</div>
+							<div class="input-group">
+								<span class="input-group-addon">group by</span>
+								<input type="number" ng-model="_groupby" class="form-control" value="1" min="1" max="100" required />
+								<span class="input-group-addon">day(s)</span>
+							</div>
+							<div class="input-group">
+								<span class="input-group-addon">Search</span>
+								<input type="text" ng-model="_query" class="form-control" placeholder="Query" />
+							</div>
+							<button class="btn btn-default" type="submit" ng-click="apply()">Apply</button>
+						</form>
+						
+						<ul class="nav navbar-nav navbar-right">
+							<li class="dropdown" dropdown on-toggle="toggled(open)">
+								<img id="subtitle" src="teste.png" dropdown-toggle />
+								<ul class="dropdown-menu" aria-labelledby="subtitle">
+									<li>
+										<a href>jHotDrawn</a>
+										<a href>jMonkeyEngine</a>
+										<a href>Maven</a>
+									</li>
+								</ul>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</nav>
 		</div>
-
+		<evowave data="data" groupby="groupby" from="from" to="to" query="query" handler="handle" />
 	</body>
-
-</html></body>
 
 </html>
