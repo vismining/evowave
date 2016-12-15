@@ -906,13 +906,16 @@ var vismining = angular.module( 'vismining-evowave', [] );
 				angular.forEach(this.sectors, function(sector, sectorId){
 					if(this.mouseTracker.angle >= sector.startAngle && this.mouseTracker.angle <= sector.endAngle){
 						this.mouseTracker.sector = sectorId;
+						this.mouseTracker.sectorLabel = sector.label;
 						angular.forEach(sector.windows, function(_window, windowId){
 							if(_window.position === windowPosition){
 								this.mouseTracker.window = windowId;
+								this.mouseTracker.windowId = _window.position;
 								if(_window.hasSpace){
 									angular.forEach(_window.molecules, function(molecule, moleculeId){
 										if(this.mouseTracker.angle <= molecule.position.angle + (_window.offset/2) && this.mouseTracker.angle >= molecule.position.angle - (_window.offset/2)){
 											this.mouseTracker.molecule = moleculeId;
+											this.mouseTracker.moleculeData = molecule.data;
 											return false;
 										}
 									}, this);
@@ -1032,7 +1035,7 @@ var vismining = angular.module( 'vismining-evowave', [] );
 			this.drawWindowGuideline = function() {
 
 				var windowPosition = Math.ceil((this.mouseTracker.radius - this.smallestRadius) / this.data.window.size);
-				
+
 				if(this.mouseTracker.previously !== undefined){
 
 					var previouslyWindowPosition = Math.ceil((this.mouseTracker.previously.radius - this.smallestRadius) / this.data.window.size);
@@ -1040,7 +1043,6 @@ var vismining = angular.module( 'vismining-evowave', [] );
 					if(windowPosition == previouslyWindowPosition) {
 						return;
 					}
-				
 
 					if(this.mouseTracker.previously.sector !== undefined && (previouslyWindowPosition > 0 && previouslyWindowPosition <= this.data.window.amount)){
 						for(i = 0; i < this.sectors.length; i++){
@@ -1089,7 +1091,15 @@ var vismining = angular.module( 'vismining-evowave', [] );
 				this.redraw();
 
 			};
+			
+			this.showMoleculeInfo = function() {
 
+				document.getElementById("sector").innerHTML = this.mouseTracker.sectorLabel;
+				document.getElementById("window").innerHTML = this.mouseTracker.windowId;
+				document.getElementById("complexity").innerHTML = this.mouseTracker.moleculeData.complexity;
+				document.getElementById("loc").innerHTML = this.mouseTracker.moleculeData.LOC;
+			};
+			
 			this.mouseMoved = function() {
 				if(!this.isInitialized){
 					return;
@@ -1098,6 +1108,7 @@ var vismining = angular.module( 'vismining-evowave', [] );
 				this.updateMouseTracker();
 				this.externals.canvas.style.cursor = 'crosshair';
 				this.drawWindowGuideline();
+				this.showMoleculeInfo();
 			};
 
 			this.mouseDragged = function() {
