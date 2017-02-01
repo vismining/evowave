@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project  xmlns="http://maven.apache.org/POM/4.0.0" 
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>br.magnavita.evowave</groupId>
+  <artifactId>evowave-ui</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>war</packaging>
+
+  <name>EVOWAVE: An open-source software evolution visualization</name>
+  <description></description>
+
+  <properties>
+    
+    <js.libs.angular.version>1.4.3</js.libs.angular.version>
+
+    <js.libs.angular.core.path>src/main/js/libs/angular-${js.libs.angular.version}/</js.libs.angular.core.path>
+    <js.libs.angular.core.libname>angular.js</js.libs.angular.core.libname>
+
+    <js.libs.angular.route.path>src/main/js/libs/angular-${js.libs.angular.version}/</js.libs.angular.route.path>
+    <js.libs.angular.route.libname>angular-route.js</js.libs.angular.route.libname>
+
+
+
+    <js.libs.processingjs.version>1.4.8</js.libs.processingjs.version>
+    <js.libs.processingjs.path>src/main/js/libs/processingjs-${js.libs.processingjs.version}/</js.libs.processingjs.path>
+    <js.libs.processingjs.libname>processing.js</js.libs.processingjs.libname>
+
+    <js.libs.colorprocessing.path>src/main/js/libs/colorprocessing/</js.libs.colorprocessing.path>
+    <js.libs.colorprocessing.libname>colorprocessing.js</js.libs.colorprocessing.libname>
+
+    <js.libs.momentjs.version>2.10.6</js.libs.momentjs.version>
+    <js.libs.momentjs.path>src/main/js/libs/momentjs-${js.libs.momentjs.version}/</js.libs.momentjs.path>
+    <js.libs.momentjs.libname>moment.js</js.libs.momentjs.libname>
+
+
+    <js.libs.bootstrap.version>3.3.5</js.libs.bootstrap.version>
+    <js.libs.bootstrap.path>src/main/js/libs/bootstrap-${js.libs.bootstrap.version}/</js.libs.bootstrap.path>
+    <js.libs.bootstrap.libname>bootstrap.js</js.libs.bootstrap.libname>
+
+    <css.libs.bootstrap.version>3.3.5</css.libs.bootstrap.version>
+    <css.libs.bootstrap.path>src/main/css/libs/bootstrap-${js.libs.bootstrap.version}/css/</css.libs.bootstrap.path>
+    <css.libs.bootstrap.libname>bootstrap.css</css.libs.bootstrap.libname>
+
+    <fonts.bootstrap.path>src/main/css/libs/bootstrap-${js.libs.bootstrap.version}/fonts/</fonts.bootstrap.path>
+
+    <js.libs.angular-ui-bootstrap.version>0.13.3</js.libs.angular-ui-bootstrap.version>
+    <js.libs.angular-ui-bootstrap.path>src/main/js/libs/angular-ui-bootstrap-${js.libs.angular-ui-bootstrap.version}/</js.libs.angular-ui-bootstrap.path>
+    <js.libs.angular-ui-bootstrap.libname>ui-bootstrap.js</js.libs.angular-ui-bootstrap.libname>
+
+    <js.angular.modules>src/main/js/modules/</js.angular.modules>
+
+    <html.pages.path>src/main/html/</html.pages.path>
+
+    <test.js.angular.modules>src/test/js/modules/</test.js.angular.modules>
+
+    <test.html.pages.path>src/test/html/</test.html.pages.path>
+
+    <env.serverapp.deploy.path>C:\apache-tomcat-7.0.50\webapps\</env.serverapp.deploy.path>
+
+  </properties>
+
+  <build>
+    <plugins>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <version>2.4</version>
+        <configuration>
+          <outputDirectory>${env.serverapp.deploy.path}</outputDirectory>         
+          <webResources>
+
+            <!-- HTML Pages -->
+            <resource>
+              <targetPath>/</targetPath>
+              <directory>${html.pages.path}</directory>
+              <filtering>true</filtering>
+              <includes>
+                <include>**/*.html</include>
+              </includes>
+            </resource>
+
+            <!-- HTML Test Pages -->
+            <resource>
+              <targetPath>/test/</targetPath>
+              <directory>${test.html.pages.path}</directory>
+              <filtering>true</filtering>
+              <includes>
+                <include>**/*.html</include>
+              </includes>
+            </resource>
+
+            <!-- AngularJS Modules -->
+            <resource>
+              <targetPath>js/modules/</targetPath>
+              <directory>${js.angular.modules}</directory>
+              <includes>
+                <include>**/*.js</include>
+              </includes>
+            </resource>
+
+            <!-- AngularJS Test Modules -->
+            <resource>
+              <targetPath>js/test/modules/</targetPath>
+              <directory>${test.js.angular.modules}</directory>
+              <includes>
+                <include>**/*.js</include>
+              </includes>
+            </resource>
+
+            <!-- AngularJS Core Library -->
+            <resource>
+              <targetPath>js/libs/</targetPath>
+              <directory>${js.libs.angular.core.path}</directory>
+              <includes>
+                <include>${js.libs.angular.core.libname}</include>
+              </includes>
+            </resource>
+
+            <!-- AngularJS Route Library -->
+            <resource>
+              <targetPath>js/libs/</targetPath>
+              <directory>${js.libs.angular.route.path}</directory>
+              <includes>
+                <include>${js.libs.angular.route.libname}</include>
+              </includes>
+            </resource>
+
+            <!-- ProcessingJS Library -->
+            <resource>
+              <targetPath>js/libs/</targetPath>
+              <directory>${js.libs.processingjs.path}</directory>
+              <includes>
+                <include>${js.libs.processingjs.libname}</include>
+              </includes>
+            </resource>
+
+            <!-- Color Processing Library -->
+            <resource>
+              <targetPath>js/libs/</targetPath>
+              <directory>${js.libs.colorprocessing.path}</directory>
+              <includes>
+                <include>${js.libs.colorprocessing.libname}</include>
+              </includes>
+            </resource>
+
+            <!-- MomentJS Library -->
+            <resource>
+              <targetPath>js/libs/</targetPath>
+              <directory>${js.libs.momentjs.path}</directory>
+              <includes>
+                <include>${js.libs.momentjs.libname}</include>
+              </includes>
+            </resource>
+
+            <!-- MomentJS Library -->
+            <resource>
+              <targetPath>js/libs/</targetPath>
+              <directory>${js.libs.momentjs.path}</directory>
+              <includes>
+                <include>${js.libs.momentjs.libname}</include>
+              </includes>
+            </resource>
+
+            <!-- Bootstrap JS Library -->
+            <resource>
+              <targetPath>js/libs/</targetPath>
+              <directory>${js.libs.bootstrap.path}</directory>
+              <includes>
+                <include>${js.libs.bootstrap.libname}</include>
+              </includes>
+            </resource>
+
+            <!-- Bootstrap CSS Library -->
+            <resource>
+              <targetPath>css/libs/</targetPath>
+              <directory>${css.libs.bootstrap.path}</directory>
+              <includes>
+                <include>${css.libs.bootstrap.libname}</include>
+              </includes>
+            </resource>
+
+            <!-- AngularUI Bootstrap JS Library -->
+            <resource>
+              <targetPath>js/libs/</targetPath>
+              <directory>${js.libs.angular-ui-bootstrap.path}</directory>
+              <includes>
+                <include>${js.libs.angular-ui-bootstrap.libname}</include>
+              </includes>
+            </resource>
+
+
+            <resource>
+              <targetPath>css/fonts/</targetPath>
+              <directory>${fonts.bootstrap.path}</directory>
+              <includes>
+                <include>*</include>
+              </includes>
+            </resource>
+
+          </webResources>
+        </configuration>
+      </plugin>
+
+    </plugins>
+  </build>
+ 
+</project>
