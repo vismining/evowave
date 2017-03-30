@@ -14,9 +14,7 @@ Projeto
 
 	this.LOC > 400 && this.complexity < 5
 */
-var data = '{"period":{"starts":"","ends":""},"query":"","window":{"size":16,"amount":7,"mode":"GLOBAL"},"sector":{"label":"project"},"sectors":[{"angle":0.4,"label":"Seção 1","windows":[{"position":1,"molecules":[{"color":"FFFF0000","data":{"complexity":2,"LOC":400}},{"color":"FF00FF00","data":{"complexity":6,"LOC":1500}},{"color":"FF0000FF","data":{"complexity":5,"LOC":900}}]},{"position":7,"molecules":[{"color":"FFFF0000","data":{"complexity":3,"LOC":440}},{"color":"FF00FF00","data":{"complexity":5,"LOC":300}},{"color":"FF0000FF","data":{"complexity":4,"LOC":550}}]}]},{"angle":0.6,"label":"Seção 2","windows":[{"position":1,"molecules":[{"color":"FFFF0000","data":{"complexity":2,"LOC":420}},{"color":"FF00FF00","data":{"complexity":6,"LOC":1300}},{"color":"FF0000FF","data":{"complexity":5,"LOC":940}}]},{"position":7,"molecules":[{"color":"FFFF0000","data":{"complexity":3,"LOC":460}},{"color":"FF00FF00","data":{"complexity":5,"LOC":360}},{"color":"FF0000FF","data":{"complexity":4,"LOC":580}}]}]}]}';
-data = JSON.parse(data);
-console.log(data);
+var data = JSON.parse('{"period":{"starts":"","ends":""},"query":"","window":{"size":16,"amount":7,"mode":"GLOBAL"},"sector":{"label":"project"},"sectors":[{"angle":50,"label":"Anos Pares","windows":[{"position":1,"molecules":[{"color":"FFFF0000","data":{"qtd_sedes":117,"qtd_postos":0.64}}]},{"position":2,"molecules":[{"color":"FF00FF00","data":{"qtd_sedes":122,"qtd_postos":0.67}}]},{"position":3,"molecules":[{"color":"FF0000FF","data":{"qtd_sedes":123,"qtd_postos":0.65}}]},{"position":4,"molecules":[{"color":"FFFF0000","data":{"qtd_sedes":127,"qtd_postos":0.72}}]},{"position":5,"molecules":[{"color":"FF00FF00","data":{"qtd_sedes":121,"qtd_postos":0.72}}]},{"position":6,"molecules":[{"color":"FF0000FF","data":{"qtd_sedes":124,"qtd_postos":0.71}}]}]},{"angle":0.5,"label":"Ímpares","windows":[{"position":1,"molecules":[{"color":"FFFF0000","data":{"qtd_sedes":111,"qtd_postos":0.67}}]},{"position":2,"molecules":[{"color":"FF00FF00","data":{"qtd_sedes":117,"qtd_postos":0.64}}]},{"position":3,"molecules":[{"color":"FF0000FF","data":{"qtd_sedes":124,"qtd_postos":0.66}}]},{"position":4,"molecules":[{"color":"FFFF0000","data":{"qtd_sedes":126,"qtd_postos":0.63}}]},{"position":5,"molecules":[{"color":"FF00FF00","data":{"qtd_sedes":125,"qtd_postos":0.74}}]},{"position":6,"molecules":[{"color":"FF0000FF","data":{"qtd_sedes":122,"qtd_postos":0.72}}]}]}]}');
 
 	$scope.data = data;
 	$scope._from = new Date(1998, 08, 27);
@@ -35,8 +33,6 @@ console.log(data);
 
 	$scope.dtMin = 'Tue Jun 23 1998 21:00:00 GMT-0300';
 	$scope.dtMax = 'Tue Jun 23 2012 21:00:00 GMT-0300';
-
-
 
 	$scope.formatDate = function(date) {
 		return moment(date, 'ddd MMM DD YYYY').format('MMMM Do YYYY');
