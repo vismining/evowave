@@ -14,7 +14,7 @@ app.controller('MainEvowaveController', ['$scope', 'evowave', function MainEvowa
     function loadProjectJson(callback, debug) {
         var url = new URL(window.location.href);
         var searchParams = new URLSearchParams(url.search);
-        var jsonPath = searchParams.get('jsonPath') || "/json/projectdata.json";
+        var jsonPath = searchParams.get('jsonPath') || "/json/projectData.json";
         var status = 0, debug = searchParams.get('debug') || false, xhr = new XMLHttpRequest;
         console.log("jsonPath: ", jsonPath);
         xhr.open("GET", jsonPath, true);
