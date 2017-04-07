@@ -21,7 +21,7 @@
                "position": 1,
                "molecules": [
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Saving user in the session"
                      }
@@ -32,85 +32,85 @@
                "position": 2,
                "molecules": [
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "T205 - CRUD TO USERS\n\nSummary:\n- Fields added to User model\n- Get all users implemented with two default fields\n- Implementation of the add method without reference to fieldnames\n- Update method just updates the fields in the body of request\n- Delete user\n- Support to migrations from command line\n\nFixes: T205\n\nTest Plan: None\n\nReviewers: sandroandrade\n\nDifferential Revision: https://phabricator.ifba.edu.br/D106"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Comment path to mysql backend"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Test to mysql"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Permanent Backend implemented"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "PEP8 Corrections"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Simple api to get users"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Corrections to clean python code"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Add flexible authentication backend architecture"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Correction to deploy in heroku"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Merge branch 'master' of https://github.com/sandroandrade/emile-server"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Task T199 - Implement modular authentication service"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Update Procfile"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Update Procfile"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Update Procfile"
                      }
@@ -121,49 +121,49 @@
                "position": 3,
                "molecules": [
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "T212 - Service turmas_professor\n\nSummary:\n-Criação do serviço turmas por professor;\n-Redefinição de crud_aluno para crud_user;\n-A tabela de Aula(horario_turma) será adicionada no próximo review;\n\nFixes: T212\n\nTest Plan: nenhum\n\nReviewers: sandroandrade\n\nDifferential Revision: https://phabricator.ifba.edu.br/D110"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "T207 - Serviço get_alunos_turma\n\nSummary:\n- O usuario tem um tipo para cada perfil(temporariamente)\n- Criacao das tabelas de Turma, Disciplina e Turma_Aluno\n- Criacao da relacao entre professor e turma\n- Services para add e getall para Disciplina\n- Services para add, getall e turma_detail  para Turma\n- Service para add aluno em uma turma\n- Uma turma ja e criada com um professor(Obrigatoriamente)\n\nTest Plan: Nenhum\n\nReviewers: sandroandrade\n\nSubscribers: brunooliveira, eliakincosta\n\nDifferential Revision: https://phabricator.ifba.edu.br/D108"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Postgres Works"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Postgres Works"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Postgres Works"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "T206 - Define better project structure\n\nSummary:\n\nIt was aplied the application factory in emile_server.py to solve circular import.\nLogin View was moved for a different file.\nRefactoring to add_user and update_user.\nFixed fields was defined to template generator.\n\nTest Plan: None\n\nReviewers: sandroandrade\n\nSubscribers: eliakincosta\n\nDifferential Revision: https://phabricator.ifba.edu.br/D107"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "SqlLite3 - version works on heroku"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "UPDATE - date type field was included and view updated"
                      }
@@ -174,43 +174,43 @@
                "position": 4,
                "molecules": [
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Migration files"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "T216 - Serviço para registro de chamada\n\nSummary:\n-Criação do crud frequency;\n-Criação do serviço frequency_register;\n-Inclusao de campo frequency_status em Lesson;\n-Criação do servico update_lesson;\n-Inclusão da relação da tabela Lesson com a tabela Frequency;\n\nFixes: T216\n\nTest Plan: Nenhum\n\nReviewers: sandroandrade\n\nSubscribers: brunooliveira, eliakincosta\n\nDifferential Revision: https://phabricator.ifba.edu.br/D115"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "T216 - Serviço para registro de chamada"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "T215 - Importes dinamico dos cruds\n\nSummary:\n- Criada funcao que recebe a app como parametro e registrar os blueprints(urls)\n- Para o importe funcionar deve-se seguir a convencao pre-determinada (crud_<nome do crud>)\n- O nome do blueprint deve ser o nome do model em caixa baixa\n\nFixes: T215\n\nRef: T212\n\nTest Plan: Nenhum\n\nReviewers: sandroandrade\n\nSubscribers: brunooliveira, eliakincosta\n\nDifferential Revision: https://phabricator.ifba.edu.br/D113"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "T214 - Service lesson in progress\n\nSummary:\n-Criação do modelo Lesson;\n-Criação do serviço lesson in progress;\n-Criação do serviço add_lesson_classes;\n-Criação do serviço students_classes;\n-Import do novo blueprint criado (No próximo commit esse import será dinâmico).\n\nFixes: T214\n\nTest Plan: None\n\nReviewers: sandroandrade\n\nSubscribers: eliakincosta\n\nDifferential Revision: https://phabricator.ifba.edu.br/D112"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Update D108"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "update review"
                      }
@@ -221,133 +221,133 @@
                "position": 5,
                "molecules": [
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Implementacao de UserType e atualizacao de referencias antigas usando uma string para o tipo"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Added New Users to the initial data json"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Bug Fix - Mudanca da API para student_attendance_register"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Merge branch 'master' of https://github.com/sandroandrade/emile-server"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Bug fix - Url de Login nao funcionava"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Update Readme - Load Initial Data"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "C\nMerge branch 'master' of https://github.com/sandroandrade/emile-server"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Dados adicionais - data.json"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Merge branch 'master' of https://github.com/sandroandrade/emile-server"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Merge from master - conflito course_section_students"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Merge from master"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Merge branch 'master' of https://github.com/sandroandrade/emile-server into script_insercao"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Script de Insercao e set_fields restantes para os modelos"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "B\nC\nC\nMerge branch 'master' of https://github.com/sandroandrade/emile-server into script_insercao"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Initial dato to one user - test"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Bug Fix - course_sections_students"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "T223 - Rever os nomes das tabelas\n\nSummary:\n- Os nomes de todas as tabelas foram alterados conforme sugestão de sandroandrade\n- Os nomes dos serviços foram atualizados\n- Nomes de campos atualizados\n- Chaves de dicionário atualizadas\n- Parâmetros modificados\n\nFixes: T223\n\nTest Plan: None\n\nReviewers: sandroandrade\n\nSubscribers: eliakincosta, brunooliveira\n\nDifferential Revision: https://phabricator.ifba.edu.br/D117"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Update README.md"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Update README.md"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Update README.md"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Update README.md"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "333477C8",
                      "data": {
                         "message": "Update README.md"
                      }
@@ -364,25 +364,25 @@
                "position": 1,
                "molecules": [
                   {
-                     "color": "FFFF0000",
+                     "color": "FF008000",
                      "data": {
                         "message": "Code refactoring for view"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "FF008000",
                      "data": {
                         "message": "Code refactoring for views and models"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "FF008000",
                      "data": {
                         "message": "Retirados formulários e templates"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "FF008000",
                      "data": {
                         "message": "T199 - Implement modular authentication service"
                      }
@@ -393,7 +393,7 @@
                "position": 2,
                "molecules": [
                   {
-                     "color": "FFFF0000",
+                     "color": "FF008000",
                      "data": {
                         "message": "T199 - Implement modular authentication service"
                      }
@@ -404,109 +404,109 @@
                "position": 5,
                "molecules": [
                   {
-                     "color": "FFFF0000",
+                     "color": "FF008000",
                      "data": {
                         "message": " Alteracao de status de retorno no serviço student_attendance_register"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "FF008000",
                      "data": {
                         "message": "Criação de serviço para consultar todas as section times de cada professor"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "FF008000",
                      "data": {
                         "message": "Merge branch 'master' of https://github.com/sandroandrade/emile-server"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "FF008000",
                      "data": {
                         "message": "Criação de serviço para listar todas as section_times"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "FF008000",
                      "data": {
                         "message": "Bug fix - unique constraint para course section students"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "FF008000",
                      "data": {
                         "message": "Merge branch 'master' of https://github.com/sandroandrade/emile-server"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "FF008000",
                      "data": {
                         "message": "Bug fix - timezone"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "FF008000",
                      "data": {
                         "message": "Bug fix - section_time_in_progress"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "FF008000",
                      "data": {
                         "message": "Criação de serviço para retornar os teachers da tabela users"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "FF008000",
                      "data": {
                         "message": "Criação de serviço para retornar os students da tabela users"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "FF008000",
                      "data": {
                         "message": "Bug fix - delete_user"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "FF008000",
                      "data": {
                         "message": "Bug fix - teachers_course_sections"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "FF008000",
                      "data": {
                         "message": "Bug fix - teachers_course_sections"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "FF008000",
                      "data": {
                         "message": "Bug fix - correção da consulta section time in progress de acordo com a hora atual"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "FF008000",
                      "data": {
                         "message": "remoção de arquivo gerado pelo pycharm"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "FF008000",
                      "data": {
                         "message": "T225 - Serviço para aluno consultar as faltas por turma\n\nSummary:\n-Criação do serviço de consulta de frequencia do aluno por turma;\n-Atualização do registro de frequencia com inclusão do campo data da aula;\n-Adequação do registro de frequência ao novo Crud adicionado (CourseSectionStudents)\n\nTest Plan: nenhum\n\nReviewers: sandroandrade\n\nSubscribers: brunooliveira, eliakincosta\n\nDifferential Revision: https://phabricator.ifba.edu.br/D119"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "FF008000",
                      "data": {
                         "message": "T224 - Serviço para aluno consultar as turmas onde ele está matriculado\n\nSummary:\n-Criação do CRUD crud_course_section_students;\n-Criação do serviço students_course_sections;\n-Alteração do serviço add_student_course_section para criação de associação.\n\nFixes: T224\n\nTest Plan: Nenhum\n\nReviewers: sandroandrade\n\nSubscribers: brunooliveira, eliakincosta\n\nDifferential Revision: https://phabricator.ifba.edu.br/D118"
                      }
                   },
                   {
-                     "color": "FFFF0000",
+                     "color": "FF008000",
                      "data": {
                         "message": "T220 - Alterar a estrutura da tabela lesson para funcionar com dias da semana e time\n\nSummary:\n-A tabela Lesson deixou de ter dois campos do tipo datetime;\n-A tabela Lesson agora possui dois campos do tipo time e um campo inteiro que representa um dia da semana (0 - 6)\n-Os serviços relacionados ao modelo foram alterados.\n\nFixes: T220\n\nTest Plan: nenhum\n\nReviewers: sandroandrade\n\nSubscribers: brunooliveira, eliakincosta\n\nDifferential Revision: https://phabricator.ifba.edu.br/D116"
                      }
