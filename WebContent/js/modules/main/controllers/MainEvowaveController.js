@@ -19,6 +19,7 @@ app.controller('MainEvowaveController', ['$scope', 'evowave', function MainEvowa
         console.log("jsonPath: ", jsonPath);
         xhr.open("GET", jsonPath, true);
         xhr.setRequestHeader("Content-type", "application/json");
+        xhr.responseType = "application/json";
         xhr.onerror = function() {
             console.error("Cannot connect to server!");
         };
@@ -32,7 +33,9 @@ app.controller('MainEvowaveController', ['$scope', 'evowave', function MainEvowa
                 }
                 if (callback) {
                     try {
+                        console.log('antes');
                         callback(status, JSON.parse(xhr.responseText));
+                        console.log('depois');
                     } catch(e) {
                         callback(status, {});
                     }

@@ -1235,8 +1235,8 @@ var vismining = angular.module( 'vismining-evowave', [] );
 	                evowave.data = util.clone(data);
 					filters.data = util.clone(data);
 
-					filters.starts = filters.data.starts;
-					filters.ends = filters.data.ends;
+					//filters.starts = filters.data.starts;
+					//filters.ends = filters.data.ends;
 
 					evowave.start();
 	            });
