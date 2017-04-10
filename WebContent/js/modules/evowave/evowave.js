@@ -1095,9 +1095,9 @@ var vismining = angular.module( 'vismining-evowave', [] );
 			this.showMoleculeInfo = function() {
 
 				document.getElementById("sector").innerHTML = this.mouseTracker.sectorLabel;
-				document.getElementById("window").innerHTML = this.mouseTracker.windowId;
-				document.getElementById("qtd_sedes").innerHTML = this.mouseTracker.moleculeData ?  this.mouseTracker.moleculeData.qtd_sedes : '';
-				document.getElementById("qtd_postos").innerHTML = this.mouseTracker.moleculeData ? this.mouseTracker.moleculeData.qtd_postos : '0';
+				document.getElementById("window").innerHTML = this.mouseTracker.windowId || '-';
+				document.getElementById("qtd_sedes").innerHTML = this.mouseTracker.moleculeData ?  this.mouseTracker.moleculeData.qtd_sedes : '-';
+				document.getElementById("qtd_postos").innerHTML = this.mouseTracker.moleculeData ? this.mouseTracker.moleculeData.qtd_postos : '-';
 			};
 			
 			this.mouseMoved = function() {

@@ -37,16 +37,12 @@ var source = {pares: [], impares: []};
 
 let colors = [
     'FFFF0000',
-    'FF00FF00',
-    'FF0000FF',
-    'FFFF0000',
-    'FF00FF00',
-    'FF0000FF'
-]
+    'FF00FF00'
+];
 
 for(let i = 0; i < source_1.pares.length; i++) {
     source.pares.push({
-        color: colors[i],
+        color: colors[0],
         data: {
             qtd_sedes: source_1.pares[i].qtd_sedes,
             qtd_postos: source_2.pares[i].qtd_postos
@@ -56,7 +52,7 @@ for(let i = 0; i < source_1.pares.length; i++) {
 
 for(let i = 0; i < source_1.impares.length; i++) {
     source.impares.push({
-        color: colors[i],
+        color: colors[1],
         data: {
             qtd_sedes: source_1.impares[i].qtd_sedes,
             qtd_postos: source_2.impares[i].qtd_postos
@@ -103,7 +99,7 @@ var data = {
         mode: 'GLOBAL'
     },
     sector: {
-        label: 'project'
+        label: 'Verificação de Disponibilidade Bancária'
     },
     sectors: [
         {
@@ -113,7 +109,7 @@ var data = {
         },
         {
             angle: impares,
-            label: 'Ímpares',
+            label: 'Anos Ímpares',
             windows: dataset_impares
         }
     ]
