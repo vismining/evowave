@@ -235,6 +235,7 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 
 				if(this.data === undefined){
+					console.log('teste')
 					this.background(this.unhex(this.colors.background_canvas));
 					this.fill(this.unhex(this.colors.messages));
 					this.text(this.messages.noDataFound, (this.width - this.textWidth(this.messages.noDataFound))/2, this.height/2);
