@@ -1097,7 +1097,8 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 				document.getElementById("sector").innerHTML = this.mouseTracker.sectorLabel;
 				document.getElementById("window").innerHTML = this.mouseTracker.windowId;
-				document.getElementById("message").innerHTML = this.mouseTracker.moleculeData.message;
+				document.getElementById("files_modified").innerHTML = this.mouseTracker.moleculeData.files_modified;
+				document.getElementById("lines_modified").innerHTML = this.mouseTracker.moleculeData.lines_modified;
 			};
 
 			this.mouseMoved = function() {
