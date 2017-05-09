@@ -1,29 +1,29 @@
 var vismining = angular.module( 'vismining-evowave', [] );
 
-	vismining.run(['$templateCache', function($templateCache) {
+	vismining.run(['$templateCache', function ($templateCache) {
 		$templateCache.put("template/vismining/evowave.html",
 			"<canvas style='cursor: default; background-color: #CCCCCC; outline: none; -webkit-tap-highlight-color: rgba(255, 255, 255, 0);' />"
 		);
 	}]);
 
-	vismining.factory('evowave-utilities', [function() {
-		return new function() {
+	vismining.factory('evowave-utilities', [function () {
+		return new function () {
 
-			this.clone = function(source) {
+			this.clone = function (source) {
 
 				var destination = undefined;
 
-				if(typeof source === 'object' && source instanceof Array){
+				if (typeof source === 'object' && source instanceof Array) {
 					destination = [];
-           			source.forEach(function(elem, index){
+           			source.forEach(function (elem, index) {
            				var clonnedElem;
            				clonnedElem = this.clone(elem);
            				destination.push(clonnedElem);
-           			}, this);					
-				} else if(typeof source === 'object'){
+           			}, this);
+				} else if (typeof source === 'object') {
 					destination = {};
 					for (var property in source) {
-						if(typeof source[property] === 'object'){
+						if (typeof source[property] === 'object') {
 							destination[property] = this.clone(source[property]);
 						} else {
 							destination[property] = source[property];
@@ -38,16 +38,16 @@ var vismining = angular.module( 'vismining-evowave', [] );
 		};
 	}]);
 
-	vismining.factory('evowave-filters', ['evowave-utilities', function(util) {
-		return new function() {
+	vismining.factory('evowave-filters', ['evowave-utilities', function (util) {
+		return new function () {
 
-			this.groupWindowsInDays = function(days, data){
+			this.groupWindowsInDays = function (days, data) {
 
-				if(this.data === undefined){
+				if (this.data === undefined) {
 					return;
 				}
 
-				if(data === undefined){
+				if (data === undefined) {
 					data = this.data;
 				}
 
@@ -55,7 +55,7 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 				delete this.days;
 
-				if(this.starts !== undefined && this.ends !== undefined){
+				if (this.starts !== undefined && this.ends !== undefined) {
 					result = this.changePeriod(this.starts, this.ends);
 				} else {
 					result = util.clone(data);
@@ -63,26 +63,26 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 				this.days = days;
 
-				var aggregator = (function(sector, days){
+				var aggregator = (function (sector, days) {
 
-					if(sector.sectors !== undefined){
+					if (sector.sectors !== undefined) {
 
-						sector.sectors.forEach(function( s, sectorId) {
+						sector.sectors.forEach(function ( s, sectorId) {
 
 							aggregator(s, days);
 
 						});
 
-					} else if(sector.windows !== undefined){
-						
+					} else if (sector.windows !== undefined) {
+
 						var windows = [];
 						var windowsDictionary = {};
 
-						sector.windows.forEach(function( _window, windowId ){
+						sector.windows.forEach(function ( _window, windowId ) {
 
 							var newPosition = Math.ceil(_window.position / days);
 
-							if(windowsDictionary[newPosition] === undefined){
+							if (windowsDictionary[newPosition] === undefined) {
 								windowsDictionary[newPosition] = { position: newPosition, molecules: [] };
 							}
 
@@ -107,9 +107,9 @@ var vismining = angular.module( 'vismining-evowave', [] );
 			};
 
 
-			this.changePeriod = function(starts, ends) {
+			this.changePeriod = function (starts, ends) {
 
-				if(this.data === undefined){
+				if (this.data === undefined) {
 					return;
 				}
 
@@ -127,26 +127,26 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 				var result = util.clone(this.data);
 
-				if((this.data.window.amount - daysAfter + daysBefore) < 0 || (this.data.window.amount - daysAfter + daysBefore) > this.data.window.amount || daysAfter < 0 || daysBefore > 0){
+				if ((this.data.window.amount - daysAfter + daysBefore) < 0 || (this.data.window.amount - daysAfter + daysBefore) > this.data.window.amount || daysAfter < 0 || daysBefore > 0) {
 					return;
 				}
 
-				var remover = (function(sector, daysAfter, daysBefore) {
+				var remover = (function (sector, daysAfter, daysBefore) {
 
-					if(sector.sectors !== undefined){
+					if (sector.sectors !== undefined) {
 
-						sector.sectors.forEach(function( s, sectorId) {
+						sector.sectors.forEach(function ( s, sectorId) {
 
 							remover(s, daysAfter, daysBefore);
 
 						});
 
-					} else if(sector.windows !== undefined){
-						
+					} else if (sector.windows !== undefined) {
+
 						var windows = [];
 
-						sector.windows.forEach(function( _window, windowId ){
-							if(_window.position > daysAfter && _window.position <= (this.data.window.amount + daysBefore)){
+						sector.windows.forEach(function ( _window, windowId ) {
+							if (_window.position > daysAfter && _window.position <= (this.data.window.amount + daysBefore)) {
 								_window.position -= daysAfter;
 								windows.push(_window);
 							}
@@ -163,7 +163,7 @@ var vismining = angular.module( 'vismining-evowave', [] );
 				result.window.amount -= daysAfter;
 				result.window.amount += daysBefore;
 
-				if(this.days !== undefined){
+				if (this.days !== undefined) {
 
 					result = this.groupWindowsInDays(this.days, result);
 
@@ -177,19 +177,19 @@ var vismining = angular.module( 'vismining-evowave', [] );
 			};
 
 		};
-	
+
 	}]);
 
-	vismining.factory('evowave-algorithm', ['evowave-utilities', function(util) {
+	vismining.factory('evowave-algorithm', ['evowave-utilities', function (util) {
 
-		/* 
-			TODO: this should be another project (perhaps evowave-js) 
+		/*
+			TODO: this should be another project (perhaps evowave-js)
 			TODO: should use its own forEach solution to remove angular.forEach dependency
 		*/
-		return new function() {
-			
+		return new function () {
+
 			this.exceptions = {
-				SectorNotFoundException: function(sectorId) {
+				SectorNotFoundException: function (sectorId) {
 					return 'SectorNotFoundException';
 				}
 			};
@@ -221,20 +221,20 @@ var vismining = angular.module( 'vismining-evowave', [] );
 				Messages: { font: undefined, fontName: 'Arial', size: 12, color: 'FF000000' }
 			};
 
-			
-			this.start = function() {
+
+			this.start = function () {
 				this.mode = 'OVERVIEW';
 				this.sector = undefined;
 				this.sectors = undefined;
 
-				angular.forEach(this.fonts, function(font, fontId){
+				angular.forEach(this.fonts, function (font, fontId) {
 					font.font = this.loadFont(font.fontName);
 				}, this);
 
 				this.loadFontInBuffer(this, this.fonts.Messages);
 
 
-				if(this.data === undefined){
+				if (this.data === undefined) {
 					this.background(this.unhex(this.colors.background_canvas));
 					this.fill(this.unhex(this.colors.messages));
 					this.text(this.messages.noDataFound, (this.width - this.textWidth(this.messages.noDataFound))/2, this.height/2);
@@ -243,11 +243,11 @@ var vismining = angular.module( 'vismining-evowave', [] );
 				this.init();
 			};
 
-			this.init = function() {
-				
+			this.init = function () {
+
 				this.isInitialized = false;
 
-				if(this.data === undefined){
+				if (this.data === undefined) {
 					return false;
 				}
 
@@ -258,15 +258,15 @@ var vismining = angular.module( 'vismining-evowave', [] );
 				delete this.dirty;
 				delete this.mouseTracker;
 
-				if(this.mode === undefined){
+				if (this.mode === undefined) {
 					this.mode = 'OVERVIEW';
 				}
 
-				if(this.data.window === undefined){
+				if (this.data.window === undefined) {
 					this.data.window = { size: 5, amount: 50 };
 				}
 
-				if(this.sector === undefined){
+				if (this.sector === undefined) {
 					this.sector = this.data;
 					this.sector.label = this.data.sector.label;
 					this.sectorsZoom = [];
@@ -276,22 +276,22 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 				this.data.window.max = 0;
 
-				if(this.mode === 'OVERVIEW'){
+				if (this.mode === 'OVERVIEW') {
 					this.sectors = [];
 					this.sectors.push(this.sector);
-				} else if(this.mode === 'DETAILED'){
+				} else if (this.mode === 'DETAILED') {
 					this.sectors = this.sector.sectors;
 				}
 
 				this.extractWindowsFromSectors(this.data);
 
-				angular.forEach(this.sectors, function(sector, sectorId) {
+				angular.forEach(this.sectors, function (sector, sectorId) {
 
 					var startAngle = 0;
 					var endAngle = (Math.PI * 2);
 					var sectorAngle = sector.angle;
 
-					if(this.mode === 'OVERVIEW'){
+					if (this.mode === 'OVERVIEW') {
 						sectorAngle = 1;
 					}
 
@@ -300,25 +300,25 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 					previousSector = sector;
 
-					if(sectorWithSmallestAngle === undefined){
+					if (sectorWithSmallestAngle === undefined) {
 						sectorWithSmallestAngle = sector;
-					} else if(sectorWithSmallestAngle.angle > sectorAngle){
+					} else if (sectorWithSmallestAngle.angle > sectorAngle) {
 						sectorWithSmallestAngle = sector;
 					}
 
-					if(biggestSectorLabel === undefined || biggestSectorLabel < this.textWidth(sector.label) ){
+					if (biggestSectorLabel === undefined || biggestSectorLabel < this.textWidth(sector.label) ) {
 						biggestSectorLabel = this.textWidth(sector.label);
 					}
 
 					sector.max = 0;
 
-					angular.forEach(sector.windows, function(_window, windowId){
-						if(_window.molecules.length > sector.max && _window.position <= this.data.window.amount){
+					angular.forEach(sector.windows, function (_window, windowId) {
+						if (_window.molecules.length > sector.max && _window.position <= this.data.window.amount) {
 							sector.max = _window.molecules.length;
 						}
 					}, this);
 
-					if(sector.max > this.data.window.max) {
+					if (sector.max > this.data.window.max) {
 						this.data.window.max = sector.max;
 					}
 
@@ -346,7 +346,7 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 				var size = (this.biggestRadius + biggestSectorLabel + 13)*2;
 
-				if(size >= 32767 || size * size >= 268435456){
+				if (size >= 32767 || size * size >= 268435456) {
 					//console.debug(size);
 					this.background(this.unhex(this.colors.background_canvas));
 					this.fill(this.unhex(this.colors.messages));
@@ -354,7 +354,7 @@ var vismining = angular.module( 'vismining-evowave', [] );
 					return;
 				}
 
-				if(this.buffer === undefined || this.buffer.width !== (this.biggestRadius + biggestSectorLabel + 13)*2 || this.buffer.height !== (this.biggestRadius + biggestSectorLabel + 13)*2){
+				if (this.buffer === undefined || this.buffer.width !== (this.biggestRadius + biggestSectorLabel + 13)*2 || this.buffer.height !== (this.biggestRadius + biggestSectorLabel + 13)*2) {
 					this.buffer = this.createGraphics(size, size, 1);
 				}
 
@@ -369,8 +369,8 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 			};
 
-			this.extractWindowsFromSectors = function(sector) {
-				if(sector.sectors !== undefined){
+			this.extractWindowsFromSectors = function (sector) {
+				if (sector.sectors !== undefined) {
 
 					var context = {};
 
@@ -378,13 +378,13 @@ var vismining = angular.module( 'vismining-evowave', [] );
 					context.windowsDictionary = {};
 					context['extractWindowsFromSectors'] = this.extractWindowsFromSectors;
 
-					angular.forEach(sector.sectors, function(_sector, sectorId) {
+					angular.forEach(sector.sectors, function (_sector, sectorId) {
 
 						this.extractWindowsFromSectors(_sector);
 
-						_sector.windows.some(function(_window, windowId){
+						_sector.windows.some(function (_window, windowId) {
 
-							if(this.windowsDictionary[_window.position] === undefined){
+							if (this.windowsDictionary[_window.position] === undefined) {
 								this.windowsDictionary[_window.position] = { position: _window.position, molecules: [] };
 								this.windows.push(this.windowsDictionary[_window.position]);
 							}
@@ -398,13 +398,13 @@ var vismining = angular.module( 'vismining-evowave', [] );
 					}, context);
 
 					sector.windows = context.windows;
-					
+
 				}
 			};
 
-			this.draw = function() {
-				
-				if(this.data === undefined || !this.isInitialized) {
+			this.draw = function () {
+
+				if (this.data === undefined || !this.isInitialized) {
 					return;
 				}
 
@@ -418,23 +418,23 @@ var vismining = angular.module( 'vismining-evowave', [] );
 				var	srcWidth = Math.round(Math.max(0, Math.min((this.buffer.width) - srcX, (this.width) - dstX)));
 				var	srcHeight = Math.round(Math.max(0, Math.min((this.buffer.width) - srcY, (this.height) - dstY)));
 				var	dstWidth = srcWidth;
-				var	dstHeight = srcHeight;				
+				var	dstHeight = srcHeight;
 
-				if(this.dirty === undefined) {
+				if (this.dirty === undefined) {
 					this.reset();
-					angular.forEach(this.sectors, function(sector, sectorId) {
+					angular.forEach(this.sectors, function (sector, sectorId) {
 						this.drawSector(sectorId);
 					}, this);
-				} else if(Object.keys(this.dirty).length > 0) {
-					angular.forEach(this.dirty, function(sector, sectorId) {
-						if(sector.windows !== undefined && Object.keys(sector.windows).length > 0) {
-							angular.forEach(sector.windows, function(_window, windowId) {
-								if(_window.molecules !== undefined && Object.keys(_window.molecules).length > 0){
-									angular.forEach(_window.molecules, function(molecule, moleculeId) {
+				} else if (Object.keys(this.dirty).length > 0) {
+					angular.forEach(this.dirty, function (sector, sectorId) {
+						if (sector.windows !== undefined && Object.keys(sector.windows).length > 0) {
+							angular.forEach(sector.windows, function (_window, windowId) {
+								if (_window.molecules !== undefined && Object.keys(_window.molecules).length > 0) {
+									angular.forEach(_window.molecules, function (molecule, moleculeId) {
 										this.drawMolecule(sectorId, windowId, moleculeId);
 									}, this);
-								} else if(_window.moleculeGroups !== undefined && Object.keys(_window.moleculeGroups).length > 0){
-									angular.forEach(_window.moleculeGroups, function(moleculeGroup, moleculeGroupId) {
+								} else if (_window.moleculeGroups !== undefined && Object.keys(_window.moleculeGroups).length > 0) {
+									angular.forEach(_window.moleculeGroups, function (moleculeGroup, moleculeGroupId) {
 										this.drawMoleculeGroup(sectorId, windowId, moleculeGroupId);
 									}, this);
 								} else {
@@ -454,25 +454,25 @@ var vismining = angular.module( 'vismining-evowave', [] );
 				this.background(this.unhex(this.colors.background_canvas));
 				this.loadPixels();
 
-				for(var x = srcX; x < srcWidth + srcX; x++){
-					for(var y = srcY; y < srcHeight + srcY; y++){
+				for (var x = srcX; x < srcWidth + srcX; x++) {
+					for (var y = srcY; y < srcHeight + srcY; y++) {
 						this.pixels.setPixel(((y-srcY+dstY) * this.width) + (x-srcX+dstX), this.buffer.pixels.getPixel((y * this.buffer.width) + x));
 					}
 				}
-	
+
 				this.updatePixels();
 
 				//console.log('Drawing in ' + (Date.now() - execTime) + 'ms');
 			};
 
-			this.loadFontInBuffer = function(buffer, font) {
+			this.loadFontInBuffer = function (buffer, font) {
 				buffer.fill(buffer.unhex(font.color));
 				buffer.textFont(font.font);
 				buffer.textSize(font.size);
 			};
 
-			this.drawSector = function(sectorId) {
-	
+			this.drawSector = function (sectorId) {
+
 				var sector = this.sectors[sectorId];
 
 				this.cleanSector(sectorId);
@@ -480,14 +480,14 @@ var vismining = angular.module( 'vismining-evowave', [] );
 				this.buffer.stroke(this.buffer.unhex(this.colors.sectorlines));
 				this.buffer.strokeWeight(2);
 
-				this.buffer.line(	(this.buffer.width/2) + (this.smallestRadius * this.buffer.cos(sector.startAngle)), 
+				this.buffer.line(	(this.buffer.width/2) + (this.smallestRadius * this.buffer.cos(sector.startAngle)),
 									(this.buffer.width/2) + (this.smallestRadius * this.buffer.sin(sector.startAngle)),
-									(this.buffer.width/2) + (this.biggestRadius * this.buffer.cos(sector.startAngle)), 
+									(this.buffer.width/2) + (this.biggestRadius * this.buffer.cos(sector.startAngle)),
 									(this.buffer.width/2) + (this.biggestRadius * this.buffer.sin(sector.startAngle)));
 
-				this.buffer.line(	(this.buffer.width/2) + (this.smallestRadius * this.buffer.cos(sector.endAngle)), 
+				this.buffer.line(	(this.buffer.width/2) + (this.smallestRadius * this.buffer.cos(sector.endAngle)),
 									(this.buffer.width/2) + (this.smallestRadius * this.buffer.sin(sector.endAngle)),
-									(this.buffer.width/2) + (this.biggestRadius * this.buffer.cos(sector.endAngle)), 
+									(this.buffer.width/2) + (this.biggestRadius * this.buffer.cos(sector.endAngle)),
 									(this.buffer.width/2) + (this.biggestRadius * this.buffer.sin(sector.endAngle)));
 
 				this.loadFontInBuffer(this.buffer, this.fonts.SectorLabel);
@@ -495,29 +495,29 @@ var vismining = angular.module( 'vismining-evowave', [] );
 				var sectorLabelAngle = sector.startAngle + ((sector.endAngle - sector.startAngle) / 2);
 				var sectorLabelRadius = (this.biggestRadius + (this.textWidth(sector.label) / 2)) + 12;
 
-				var sectorLabelPosition = { x: (this.buffer.width/2) + (sectorLabelRadius * this.buffer.cos(sectorLabelAngle)), 
+				var sectorLabelPosition = { x: (this.buffer.width/2) + (sectorLabelRadius * this.buffer.cos(sectorLabelAngle)),
 											y: (this.buffer.width/2) + (sectorLabelRadius * this.buffer.sin(sectorLabelAngle))};
 
 				this.buffer.fill(this.buffer.unhex(this.fonts.SectorLabel.color));
 
 				this.buffer.pushMatrix();
 				this.buffer.translate(sectorLabelPosition.x, sectorLabelPosition.y);
-				if(sectorLabelAngle > (Math.PI/2) && sectorLabelAngle < Math.PI + (Math.PI/2)) {
+				if (sectorLabelAngle > (Math.PI/2) && sectorLabelAngle < Math.PI + (Math.PI/2)) {
 					this.buffer.rotate(sectorLabelAngle + Math.PI);
 				} else {
 					this.buffer.rotate(sectorLabelAngle);
 				}
-				
-				this.buffer.text(sector.label, -(this.textWidth(sector.label)/2), this.fonts.SectorLabel.size/4);	
+
+				this.buffer.text(sector.label, -(this.textWidth(sector.label)/2), this.fonts.SectorLabel.size/4);
 				this.buffer.popMatrix();
 
-				angular.forEach(sector.windows, function(_window, windowId){
+				angular.forEach(sector.windows, function (_window, windowId) {
 					this.drawWindow(sectorId, windowId);
 				}, this);
 
 			};
 
-			this.fillWindow = function(sectorId, windowId) {
+			this.fillWindow = function (sectorId, windowId) {
 				var sector = this.sectors[sectorId];
 				var _window = sector.windows[windowId];
 
@@ -530,18 +530,18 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 			};
 
-			this.cleanWindow = function(sectorId, windowId) {
+			this.cleanWindow = function (sectorId, windowId) {
 				this.buffer.fill(this.buffer.unhex(this.colors.background));
 				this.buffer.noStroke();
 				this.fillWindow(sectorId, windowId);
 			};
 
-			this.cleanSector = function(sectorId) {
+			this.cleanSector = function (sectorId) {
 
 				var sector = this.sectors[sectorId];
 
-				if(sector.background === undefined){
-					if((sectorId % 2) == 0){
+				if (sector.background === undefined) {
+					if ((sectorId % 2) == 0) {
 						sector.background = this.colors.sector_odd;
 					} else {
 						sector.background = this.colors.sector_even;
@@ -554,42 +554,42 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 			};
 
-			this.fillSector = function(startAngle, endAngle, biggestRadius, smallestRadius) {
+			this.fillSector = function (startAngle, endAngle, biggestRadius, smallestRadius) {
 				var angle = startAngle;
 
 				this.buffer.beginShape();
 
-				while(angle <= endAngle){
+				while(angle <= endAngle) {
 					var nextAngle = Math.min(endAngle, angle + (Math.PI/90));
-					
+
 					this.buffer.vertex((this.buffer.width/2) + (smallestRadius * this.buffer.cos(angle)), (this.buffer.width/2) + (smallestRadius * this.buffer.sin(angle)));
 					this.buffer.vertex((this.buffer.width/2) + (smallestRadius * this.buffer.cos(nextAngle)), (this.buffer.width/2) + (smallestRadius * this.buffer.sin(nextAngle)));
-					
+
 					angle += (Math.PI/90);
 				}
 
 				angle = endAngle;
 
-				while(angle >= startAngle){
+				while(angle >= startAngle) {
 					var nextAngle = Math.max(startAngle, angle - (Math.PI/90));
-					
+
 					this.buffer.vertex((this.buffer.width/2) + (biggestRadius * this.buffer.cos(angle)), (this.buffer.width/2) + (biggestRadius * this.buffer.sin(angle)));
 					this.buffer.vertex((this.buffer.width/2) + (biggestRadius * this.buffer.cos(nextAngle)), (this.buffer.width/2) + (biggestRadius * this.buffer.sin(nextAngle)));
-				
+
 					angle -= (Math.PI/90);
 				}
-	
+
 
 				this.buffer.endShape(2);
 			};
 
 
 
-			this.drawWindow = function(sectorId, windowId) {
+			this.drawWindow = function (sectorId, windowId) {
 				var sector = this.sectors[sectorId];
 				var _window = sector.windows[windowId];
-				
-				if(_window.position > this.data.window.amount) {
+
+				if (_window.position > this.data.window.amount) {
 					return;
 				}
 
@@ -607,7 +607,7 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 				var hex = this.amountColorTransition.getColorAtValue(_window.molecules.length/(this.data.window.max+1)).getHex();
 
-				if(this.data.window.mode === 'LOCAL'){
+				if (this.data.window.mode === 'LOCAL') {
 					hex = this.amountColorTransition.getColorAtValue(_window.molecules.length/(sector.max+1)).getHex();
 				}
 
@@ -617,32 +617,32 @@ var vismining = angular.module( 'vismining-evowave', [] );
 				this.buffer.fill(amountColor);
 				this.buffer.stroke(amountColor);
 				this.fillSector(
-					sector.startAngle + Math.atan( 3 /*sector border weight*/ / w ), 
-					sector.startAngle + Math.atan( 4 /*sector border weight*/ / w ), 
+					sector.startAngle + Math.atan( 3 /*sector border weight*/ / w ),
+					sector.startAngle + Math.atan( 4 /*sector border weight*/ / w ),
 					(_window.position * this.data.window.size) + this.smallestRadius - this.data.window.size + 1,
 					(_window.position * this.data.window.size) + this.smallestRadius - 1
 				);
 
 				this.fillSector(
-					sector.endAngle - Math.atan( 4 /*sector border weight*/ / w ), 
-					sector.endAngle - Math.atan( 3 /*sector border weight*/ / w ), 
+					sector.endAngle - Math.atan( 4 /*sector border weight*/ / w ),
+					sector.endAngle - Math.atan( 3 /*sector border weight*/ / w ),
 					(_window.position * this.data.window.size) + this.smallestRadius - this.data.window.size + 1,
 					(_window.position * this.data.window.size) + this.smallestRadius - 1
 				);
 
-				if(_window.molecules !== undefined && _window.offset <= offset) {
+				if (_window.molecules !== undefined && _window.offset <= offset) {
 
 					var moleculeIndex = 0;
 
-					if(_window.molecules.length === 1){
+					if (_window.molecules.length === 1) {
 						moleculeIndex = 1;
 						offset = (endAngle - startAngle) / 2;
 					}
-					
+
 					_window.hasSpace = true;
 
-					angular.forEach(_window.molecules, function(molecule, moleculeId) {
-						
+					angular.forEach(_window.molecules, function (molecule, moleculeId) {
+
 						angle = (moleculeIndex * offset);
 
 						moleculeIndex++;
@@ -653,17 +653,17 @@ var vismining = angular.module( 'vismining-evowave', [] );
 							angle: startAngle + angle
 						};
 
-						molecule.matchQuery = function(query){
+						molecule.matchQuery = function (query) {
 							return query === undefined || query.length == 0 || typeof eval(query) !== 'boolean' || eval(query);
 						}.call(util.clone(molecule.data), this.data.query);
 
-						if(molecule.matchQuery){
+						if (molecule.matchQuery) {
 							_window.matchQuery++;
 							sector.matchQuery++;
 						}
 
 						this.drawMolecule(sectorId, windowId, moleculeId);
-						
+
 					}, this);
 
 				} else {
@@ -677,21 +677,21 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 					_window.matchQuery = 0;
 
-					angular.forEach(_window.molecules, function(molecule, moleculeId) {
+					angular.forEach(_window.molecules, function (molecule, moleculeId) {
 
-						if(molecule.color === undefined){
+						if (molecule.color === undefined) {
 							molecule.color = this.colors.molecule;
 						}
 
-						if(_window.groups['_' + molecule.color] === undefined){
+						if (_window.groups['_' + molecule.color] === undefined) {
 							_window.groups['_' + molecule.color] = {startAngle: 0, endAngle: 0, matchQuery: 0, molecules: []};
 						}
 
-						molecule.matchQuery = function(query){
+						molecule.matchQuery = function (query) {
 							return query === undefined || query.length == 0 || typeof eval(query) !== 'boolean' || eval(query);
 						}.call(util.clone(molecule.data), this.data.query);
 
-						if(molecule.matchQuery){
+						if (molecule.matchQuery) {
 							_window.groups['_' + molecule.color].matchQuery++;
 							_window.matchQuery++;
 							sector.matchQuery++;
@@ -701,8 +701,8 @@ var vismining = angular.module( 'vismining-evowave', [] );
 					}, this);
 
 					var _startAngle = startAngle;
-					
-					angular.forEach(_window.groups, function(group, groupId) {
+
+					angular.forEach(_window.groups, function (group, groupId) {
 						angle = (endAngle - startAngle) * (group.molecules.length / _window.molecules.length);
 
 						group.startAngle = _startAngle;
@@ -712,10 +712,10 @@ var vismining = angular.module( 'vismining-evowave', [] );
 						_startAngle += angle;
 					}, this);
 				}
-				
+
 			};
 
-			this.drawMoleculeGroup = function(sectorId, windowId, moleculeGroupId) {
+			this.drawMoleculeGroup = function (sectorId, windowId, moleculeGroupId) {
 
 				this.cleanMoleculeGroup(sectorId, windowId, moleculeGroupId);
 
@@ -729,8 +729,8 @@ var vismining = angular.module( 'vismining-evowave', [] );
 				var biggestRadius = w + this.data.window.size;
 				var smallestRadius = w;
 
-				
-				if(moleculeGroup.matchQuery >= 0){
+
+				if (moleculeGroup.matchQuery >= 0) {
 					var matchQueryAngle = (endAngle - startAngle) - (((endAngle - startAngle) * moleculeGroup.matchQuery) / moleculeGroup.molecules.length);
 					endAngle -= matchQueryAngle;
 				}
@@ -740,16 +740,16 @@ var vismining = angular.module( 'vismining-evowave', [] );
 				this.buffer.noStroke();
 				this.fillSector(startAngle, endAngle, biggestRadius, smallestRadius);
 
-				
-				if(moleculeGroup.matchQuery >= 0){
+
+				if (moleculeGroup.matchQuery >= 0) {
 					this.buffer.fill(this.buffer.unhex(this.colors.matchQuery));
 					this.buffer.noStroke();
 					this.fillSector(endAngle, endAngle + matchQueryAngle, biggestRadius, smallestRadius);
 				}
-				
+
 			};
 
-			this.cleanMoleculeGroup = function(sectorId, windowId, moleculeGroupId) {
+			this.cleanMoleculeGroup = function (sectorId, windowId, moleculeGroupId) {
 
 				var sector = this.sectors[sectorId];
 				var _window = sector.windows[windowId];
@@ -767,7 +767,7 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 			};
 
-			this.drawMolecule = function(sectorId, windowId, moleculeId) {
+			this.drawMolecule = function (sectorId, windowId, moleculeId) {
 
 				this.cleanMolecule(sectorId, windowId, moleculeId);
 
@@ -775,11 +775,11 @@ var vismining = angular.module( 'vismining-evowave', [] );
 				var _window = sector.windows[windowId];
 				var molecule = _window.molecules[moleculeId];
 
-				if(molecule.color === undefined){
+				if (molecule.color === undefined) {
 					molecule.color = this.colors.molecule;
 				}
 
-				if(!molecule.matchQuery){
+				if (!molecule.matchQuery) {
 					this.buffer.strokeWeight(1);
 					this.buffer.fill(this.buffer.unhex(this.colors.background));
 					this.buffer.stroke(this.buffer.unhex(this.colors.matchQuery));
@@ -788,20 +788,20 @@ var vismining = angular.module( 'vismining-evowave', [] );
 					this.buffer.fill(this.buffer.unhex(molecule.color));
 					this.buffer.stroke(this.buffer.unhex(molecule.color));
 				}
-				
+
 				this.buffer.ellipse(	molecule.position.x,
 										molecule.position.y,
-										this.data.window.size-3, 
+										this.data.window.size-3,
 										this.data.window.size-3);
 			};
 
-			this.cleanMolecule = function(sectorId, windowId, moleculeId) {
-				
+			this.cleanMolecule = function (sectorId, windowId, moleculeId) {
+
 				var sector = this.sectors[sectorId];
 				var _window = sector.windows[windowId];
 				var molecule = _window.molecules[moleculeId];
 
-				if(molecule.color === undefined){
+				if (molecule.color === undefined) {
 					molecule.color = this.colors.molecule;
 				}
 
@@ -810,12 +810,12 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 				this.buffer.ellipse(	molecule.position.x,
 										molecule.position.y,
-										this.data.window.size-3, 
+										this.data.window.size-3,
 										this.data.window.size-3);
 
 			};
 
-			this.reset = function() {
+			this.reset = function () {
 
 				this.clean();
 
@@ -841,24 +841,24 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 				this.biggestRadius -= 1;
 				this.smallestRadius += 1;
-				
+
 			};
 
-			this.clean = function() {
+			this.clean = function () {
 				this.buffer.background(this.buffer.unhex(this.colors.background_canvas));
 				this.buffer.background(this.buffer.unhex(this.colors.background_canvas));
 			};
 
 
-			this.updateMouseTracker = function() {
-		
-				if(this.mouseTracker !== undefined) {
+			this.updateMouseTracker = function () {
+
+				if (this.mouseTracker !== undefined) {
 					delete this.mouseTracker.previously;
 				}
 
 				var previouslyMouseTracker = this.mouseTracker;
 
-				this.mouseTracker = { 	x: this.mouseX, 
+				this.mouseTracker = { 	x: this.mouseX,
 										y: this.mouseY,
 										previously: previouslyMouseTracker};
 
@@ -880,48 +880,48 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 				this.mouseTracker.angle = Math.abs(Math.atan((bufferY - centerY)/(bufferX - centerX)));
 				this.mouseTracker.radius = Math.round(Math.abs((bufferX - centerX) / Math.cos(this.mouseTracker.angle)));
-				
-				if(isNaN(this.mouseTracker.radius)){
+
+				if (isNaN(this.mouseTracker.radius)) {
 					this.mouseTracker.radius = Math.abs((bufferY - centerY) / Math.sin(this.mouseTracker.angle));
 				}
-				
-				if(bufferX > centerX && bufferY < centerY){
+
+				if (bufferX > centerX && bufferY < centerY) {
 					this.mouseTracker.angle = ((Math.PI/2) - this.mouseTracker.angle) + (Math.PI/2);
-				} else if(bufferX > centerX && bufferY > centerY){
+				} else if (bufferX > centerX && bufferY > centerY) {
 					this.mouseTracker.angle += Math.PI;
-				} else if(bufferX < centerX && bufferY > centerY){
+				} else if (bufferX < centerX && bufferY > centerY) {
 					this.mouseTracker.angle = ((Math.PI/2) - this.mouseTracker.angle) + Math.PI + (Math.PI/2);
 				}
-				
-				if(isNaN(this.mouseTracker.angle)){
+
+				if (isNaN(this.mouseTracker.angle)) {
 					this.mouseTracker.angle = 0;
 				}
 
-				if(isNaN(this.mouseTracker.radius)){
+				if (isNaN(this.mouseTracker.radius)) {
 					this.mouseTracker.radius = 0;
 				}
 
 				var windowPosition = Math.min(this.data.window.amount, Math.max(0, Math.ceil((this.mouseTracker.radius - this.smallestRadius) / this.data.window.size)));
-				
-				angular.forEach(this.sectors, function(sector, sectorId){
-					if(this.mouseTracker.angle >= sector.startAngle && this.mouseTracker.angle <= sector.endAngle){
+
+				angular.forEach(this.sectors, function (sector, sectorId) {
+					if (this.mouseTracker.angle >= sector.startAngle && this.mouseTracker.angle <= sector.endAngle) {
 						this.mouseTracker.sector = sectorId;
 						this.mouseTracker.sectorLabel = sector.label;
-						angular.forEach(sector.windows, function(_window, windowId){
-							if(_window.position === windowPosition){
+						angular.forEach(sector.windows, function (_window, windowId) {
+							if (_window.position === windowPosition) {
 								this.mouseTracker.window = windowId;
 								this.mouseTracker.windowId = _window.position;
-								if(_window.hasSpace){
-									angular.forEach(_window.molecules, function(molecule, moleculeId){
-										if(this.mouseTracker.angle <= molecule.position.angle + (_window.offset/2) && this.mouseTracker.angle >= molecule.position.angle - (_window.offset/2)){
+								if (_window.hasSpace) {
+									angular.forEach(_window.molecules, function (molecule, moleculeId) {
+										if (this.mouseTracker.angle <= molecule.position.angle + (_window.offset/2) && this.mouseTracker.angle >= molecule.position.angle - (_window.offset/2)) {
 											this.mouseTracker.molecule = moleculeId;
 											this.mouseTracker.moleculeData = molecule.data;
 											return false;
 										}
 									}, this);
 								} else {
-									angular.forEach(_window.groups, function(group, groupId){
-										if(this.mouseTracker.angle <= group.endAngle && this.mouseTracker.angle >= group.startAngle){
+									angular.forEach(_window.groups, function (group, groupId) {
+										if (this.mouseTracker.angle <= group.endAngle && this.mouseTracker.angle >= group.startAngle) {
 											this.mouseTracker.group = groupId;
 											return false;
 										}
@@ -938,36 +938,36 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 			};
 
-			this.makeDirty = function(sectorId, windowId, moleculeId, moleculeGroupId) {
-				
-				if(sectorId === undefined) {
+			this.makeDirty = function (sectorId, windowId, moleculeId, moleculeGroupId) {
+
+				if (sectorId === undefined) {
 					delete this.dirty;
 					return;
 				}
 
-				if(this.dirty === undefined){
+				if (this.dirty === undefined) {
 					this.dirty = {};
 				}
 
-				if(this.dirty[sectorId] === undefined) {
+				if (this.dirty[sectorId] === undefined) {
 					this.dirty[sectorId] = { windows: {} };
 				}
 
-				if(windowId !== undefined && this.dirty[sectorId].windows[windowId] === undefined) {
+				if (windowId !== undefined && this.dirty[sectorId].windows[windowId] === undefined) {
 					this.dirty[sectorId].windows[windowId] = { molecules: {}, moleculeGroups: {} };
 				}
 
-				if(moleculeId !== undefined && this.dirty[sectorId].windows[windowId].molecules[moleculeId] === undefined) {
+				if (moleculeId !== undefined && this.dirty[sectorId].windows[windowId].molecules[moleculeId] === undefined) {
 					this.dirty[sectorId].windows[windowId].molecules[moleculeId] = 'dirty';
 				}
 
-				if(moleculeId !== undefined && this.dirty[sectorId].windows[windowId].moleculeGroups[moleculeGroupId] === undefined) {
+				if (moleculeId !== undefined && this.dirty[sectorId].windows[windowId].moleculeGroups[moleculeGroupId] === undefined) {
 					this.dirty[sectorId].windows[windowId].moleculeGroups[moleculeGroupId] = 'dirty';
 				}
 
 			};
 
-			this.drawSelection = function() {
+			this.drawSelection = function () {
 
 				var srcX = Math.round(Math.min(Math.max(0, this.center.x - (this.width/2)), this.buffer.width));
 				var	srcY = Math.round(Math.min(Math.max(0, this.center.y - (this.height/2)), this.buffer.width));
@@ -977,28 +977,28 @@ var vismining = angular.module( 'vismining-evowave', [] );
 				var	srcWidth = Math.round(Math.max(0, Math.min((this.buffer.width) - srcX, (this.width) - dstX)));
 				var	srcHeight = Math.round(Math.max(0, Math.min((this.buffer.width) - srcY, (this.height) - dstY)));
 				var	dstWidth = srcWidth;
-				var	dstHeight = srcHeight;		
+				var	dstHeight = srcHeight;
 
-				if(this.mouseTracker.previously !== undefined && this.mouseTracker.previously.sector === this.mouseTracker.sector && this.mouseTracker.previously.window === this.mouseTracker.window){
+				if (this.mouseTracker.previously !== undefined && this.mouseTracker.previously.sector === this.mouseTracker.sector && this.mouseTracker.previously.window === this.mouseTracker.window) {
 					return;
 				}
 
-				if(this.mouseTracker.sector !== undefined && this.mouseTracker.window !== undefined){
+				if (this.mouseTracker.sector !== undefined && this.mouseTracker.window !== undefined) {
 					var doSelection = true;
-					
-					if(this.selectionTracker !== undefined){
-						if(this.selectionTracker.previously !== undefined && this.selectionTracker.previously.sector === this.mouseTracker.sector && this.selectionTracker.previously.window === this.mouseTracker.window) {
+
+					if (this.selectionTracker !== undefined) {
+						if (this.selectionTracker.previously !== undefined && this.selectionTracker.previously.sector === this.mouseTracker.sector && this.selectionTracker.previously.window === this.mouseTracker.window) {
 							doSelection = false;
-						} else {	
-							angular.forEach(this.selectionTracker.selections, function(selection, selectionSector) {
-								if((selection.max.sector === this.mouseTracker.sector && selection.max.window === this.mouseTracker.window) || (selection.min.sector === this.mouseTracker.sector && selection.min.window === this.mouseTracker.window)){
+						} else {
+							angular.forEach(this.selectionTracker.selections, function (selection, selectionSector) {
+								if ((selection.max.sector === this.mouseTracker.sector && selection.max.window === this.mouseTracker.window) || (selection.min.sector === this.mouseTracker.sector && selection.min.window === this.mouseTracker.window)) {
 									doSelection = false;
 								}
 							}, this);
 						}
 					}
 
-					if(doSelection){
+					if (doSelection) {
 						this.buffer.fill(this.unhex(this.colors.selection));
 						this.buffer.noStroke();
 						this.fillWindow(this.mouseTracker.sector, this.mouseTracker.window);
@@ -1006,23 +1006,23 @@ var vismining = angular.module( 'vismining-evowave', [] );
 				}
 
 
-				if(this.mouseTracker.previously !== undefined && this.mouseTracker.previously.sector !== undefined && this.mouseTracker.previously.window !== undefined){
+				if (this.mouseTracker.previously !== undefined && this.mouseTracker.previously.sector !== undefined && this.mouseTracker.previously.window !== undefined) {
 
 					var makeDirty = true;
-					
-					if(this.selectionTracker !== undefined){
-						if(this.selectionTracker.previously !== undefined && this.selectionTracker.previously.sector === this.mouseTracker.previously.sector && this.selectionTracker.previously.window === this.mouseTracker.previously.window) {
+
+					if (this.selectionTracker !== undefined) {
+						if (this.selectionTracker.previously !== undefined && this.selectionTracker.previously.sector === this.mouseTracker.previously.sector && this.selectionTracker.previously.window === this.mouseTracker.previously.window) {
 							makeDirty = false;
-						} else {	
-							angular.forEach(this.selectionTracker.selections, function(selection, selectionSector) {
-								if((selection.max.sector === this.mouseTracker.previously.sector && selection.max.window === this.mouseTracker.previously.window) || (selection.min.sector === this.mouseTracker.previously.sector && selection.min.window === this.mouseTracker.previously.window)){
+						} else {
+							angular.forEach(this.selectionTracker.selections, function (selection, selectionSector) {
+								if ((selection.max.sector === this.mouseTracker.previously.sector && selection.max.window === this.mouseTracker.previously.window) || (selection.min.sector === this.mouseTracker.previously.sector && selection.min.window === this.mouseTracker.previously.window)) {
 									makeDirty = false;
 								}
 							}, this);
 						}
 					}
 
-					if(makeDirty){
+					if (makeDirty) {
 						this.makeDirty(this.mouseTracker.previously.sector, this.mouseTracker.previously.window);
 					}
 				} else {
@@ -1032,92 +1032,76 @@ var vismining = angular.module( 'vismining-evowave', [] );
 				this.redraw();
 			};
 
-			this.drawWindowGuideline = function() {
+			this.drawWindowGuideline = function () {
 
 				var windowPosition = Math.ceil((this.mouseTracker.radius - this.smallestRadius) / this.data.window.size);
 
-				if(this.mouseTracker.previously !== undefined){
+				if (this.mouseTracker.previously !== undefined) {
 
 					var previouslyWindowPosition = Math.ceil((this.mouseTracker.previously.radius - this.smallestRadius) / this.data.window.size);
 
-					if(windowPosition == previouslyWindowPosition) {
+					if (windowPosition == previouslyWindowPosition) {
 						return;
 					}
 
-					if(this.mouseTracker.previously.sector !== undefined && (previouslyWindowPosition > 0 && previouslyWindowPosition <= this.data.window.amount)){
-						for(i = 0; i < this.sectors.length; i++){
-
+					if (this.mouseTracker.previously.sector !== undefined && (previouslyWindowPosition > 0 && previouslyWindowPosition <= this.data.window.amount)) {
+						for (i = 0; i < this.sectors.length; i++) {
 							var sector = this.sectors[i];
-
 							var windowPositionPreviously = Math.min(this.data.window.amount, Math.max(0, Math.ceil((this.mouseTracker.previously.radius - this.smallestRadius) / this.data.window.size)));
-
 							var w = this.smallestRadius + ((windowPositionPreviously-1)*this.data.window.size);
-
 							var startAngle = sector.startAngle + (Math.atan( 2/*sector border weight*/ / (w + (this.data.window.size/2)) ));
 							var endAngle = sector.endAngle - (Math.atan( 2/*sector border weight*/ / (w + (this.data.window.size/2)) ));
-
 							var result = {};
-
-							var hasWindow = sector.windows.some(function(_window, windowId){
-								if(_window.position === windowPositionPreviously){
+							var hasWindow = sector.windows.some(function (_window, windowId) {
+								if (_window.position === windowPositionPreviously) {
 									this.windowId = windowId;
 									return true;
 								}
 							}, result);
-
-							if(hasWindow){
-								this.makeDirty(i, result.windowId);	
+							if (hasWindow) {
+								this.makeDirty(i, result.windowId);
 							} else {
 								this.buffer.fill(this.buffer.unhex(sector.background));
 								this.buffer.noStroke();
 								this.fillSector(startAngle, endAngle, (w+this.data.window.size-1), w+1);
 							}
-						}						
+						}
 					}
-
 				}
 
-				if(this.mouseTracker.sector !== undefined && (windowPosition > 0 && windowPosition <= this.data.window.amount)){
-
-					var sector = this.sectors[this.mouseTracker.sector];	
-
+				if (this.mouseTracker.sector !== undefined && (windowPosition > 0 && windowPosition <= this.data.window.amount)) {
+					var sector = this.sectors[this.mouseTracker.sector];
 					var radius = this.smallestRadius + ( windowPosition * this.data.window.size) - this.data.window.size/2;
-
 					this.buffer.noFill();
 					this.buffer.stroke(this.buffer.unhex(this.colors.window_guideline));
 					this.buffer.ellipse(this.buffer.width/2, this.buffer.height/2, radius * 2, radius * 2);
 				}
-
 				this.redraw();
-
 			};
-			
-			this.showMoleculeInfo = function() {
 
+			this.showMoleculeInfo = function () {
 				document.getElementById("sector").innerHTML = this.mouseTracker.sectorLabel;
 				document.getElementById("window").innerHTML = this.mouseTracker.windowId || '-';
 				document.getElementById("qtd_sedes").innerHTML = this.mouseTracker.moleculeData ?  this.mouseTracker.moleculeData.qtd_sedes : '-';
 				document.getElementById("qtd_postos").innerHTML = this.mouseTracker.moleculeData ? this.mouseTracker.moleculeData.qtd_postos : '-';
 			};
-			
-			this.mouseMoved = function() {
-				if(!this.isInitialized){
+
+			this.mouseMoved = function () {
+				if (!this.isInitialized) {
 					return;
 				}
-
 				this.updateMouseTracker();
 				this.externals.canvas.style.cursor = 'crosshair';
 				this.drawWindowGuideline();
 				this.showMoleculeInfo();
 			};
 
-			this.mouseDragged = function() {
-				if(!this.isInitialized){
+			this.mouseDragged = function () {
+				if (!this.isInitialized) {
 					return;
 				}
-
-				if(this.mouseButton === 37) {
-					if(this.mouseTracker === undefined){
+				if (this.mouseButton === 37) {
+					if (this.mouseTracker === undefined) {
 						this.updateMouseTracker();
 					}
 					this.externals.canvas.style.cursor = '-webkit-grabbing';
@@ -1128,9 +1112,8 @@ var vismining = angular.module( 'vismining-evowave', [] );
 				}
 			};
 
-			this.mouseClicked = function() {
-				
-				if(!this.isInitialized){
+			this.mouseClicked = function () {
+				if (!this.isInitialized) {
 					return;
 				}
 
@@ -1138,25 +1121,25 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 				var redraw = false;
 
-				if(this.mouseButton == 37 || this.mouseButton == 39){
-					if(this.mouseButton == 37) { 
-						if(this.mode === 'OVERVIEW'){
-							if(this.sector.sectors !== undefined){
+				if (this.mouseButton == 37 || this.mouseButton == 39) {
+					if (this.mouseButton == 37) {
+						if (this.mode === 'OVERVIEW') {
+							if (this.sector.sectors !== undefined) {
 								this.mode = 'DETAILED';
 								redraw = true;
 							}
-						} else if(this.mode === 'DETAILED') {
+						} else if (this.mode === 'DETAILED') {
 							this.mode = 'OVERVIEW';
 							this.sectorsZoom.push(this.sector);
 							this.sector = this.sectors[this.mouseTracker.sector];
 							redraw = true;
 						}
-					} else if(this.mouseButton == 39){
-						if(this.mode === 'DETAILED'){
+					} else if (this.mouseButton == 39) {
+						if (this.mode === 'DETAILED') {
 							this.mode = 'OVERVIEW';
 							redraw = true;
-						} else if(this.mode === 'OVERVIEW') {
-							if(this.sectorsZoom.length > 0){
+						} else if (this.mode === 'OVERVIEW') {
+							if (this.sectorsZoom.length > 0) {
 								this.mode = 'DETAILED';
 								this.sector = this.sectorsZoom.pop();
 								redraw = true;
@@ -1164,88 +1147,79 @@ var vismining = angular.module( 'vismining-evowave', [] );
 						}
 					}
 
-					if(redraw){
+					if (redraw) {
 						this.isInitialized = false;
 						this.background(this.unhex(this.colors.background));
 						this.loadFontInBuffer(this, this.fonts.Messages);
 						this.text(this.messages.loading, this.width/2 - (this.textWidth(this.messages.loading)/2), this.height/2);
 						var context = this;
-						window.setTimeout(function(){context.init()}, 10);
-					}						
+						window.setTimeout(function () {context.init()}, 10);
+					}
 				}
-				
+
 			};
 
-			this.mouseReleased = function() {
-				if(!this.isInitialized){
+			this.mouseReleased = function () {
+				if (!this.isInitialized) {
 					return;
 				}
-
 				this.updateMouseTracker();
-			};	
-
+			};
 		};
-
 	}]);
 
 	vismining.value('evowave', undefined);
 
-	vismining.directive('evowave', ['evowave-algorithm', 'evowave-filters', 'evowave-utilities', function(algorithm, filters, util) {
+	vismining.directive('evowave', ['evowave-algorithm', 'evowave-filters', 'evowave-utilities', function (algorithm, filters, util) {
 		return {
 			restrict: 'E',
 			templateUrl: 'template/vismining/evowave.html',
-			link: function($scope, $element, attrs) {
+			link: function ($scope, $element, attrs) {
 				var $canvas = $element.find('canvas');
 				var canvas = $canvas[0];
 
 				canvas.width = $element.parent()[0].clientWidth;
 				canvas.height = $element.parent()[0].clientHeight;
 
-				var evowave = new Processing(canvas, function(processing) {
-					
+				var evowave = new Processing(canvas, function (processing) {
 					angular.extend(processing, algorithm);
-
-					processing.setup = function() {
+					processing.setup = function () {
 						processing.size(canvas.width, canvas.height);
 				  		processing.noLoop();
 					};
-
 				});
 
-				$scope.$watch(attrs.groupby, function(groupby){
+				$scope.$watch(attrs.groupby, function (groupby) {
 					evowave.data = filters.groupWindowsInDays(groupby);
 	                evowave.start();
 	            });
 
-	            $scope.$watch(attrs.query, function(query){
-					
-	            	if(evowave.data === undefined){
+	            $scope.$watch(attrs.query, function (query) {
+	            	if (evowave.data === undefined) {
 						return;
 					}
-
 					evowave.data.query = query;
 					evowave.makeDirty();
 	                evowave.redraw();
 	            });
 
-				$scope.$watch(attrs.handler, function(handler){
+				$scope.$watch(attrs.handler, function (handler) {
 	                evowave.onMouseTrackerUpdatedHandler = handler;
 	            });
 
-				$scope.$watch(attrs.data, function(data){
+				$scope.$watch(attrs.data, function (data) {
 	                evowave.data = util.clone(data);
 					filters.data = util.clone(data);
-
-					filters.starts = filters.data.starts;
-					filters.ends = filters.data.ends;
-					
+                    if (filters.data) {
+                        filters.starts = filters.data.starts;
+                        filters.ends = filters.data.ends;
+                    }
 					evowave.start();
 	            });
 
 				evowave.start();
 
 				vismining.value('evowave', evowave);
-
 			}
 		};
 	}]);
