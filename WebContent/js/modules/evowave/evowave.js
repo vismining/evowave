@@ -1083,8 +1083,15 @@ var vismining = angular.module( 'vismining-evowave', [] );
 				document.getElementById("sector").innerHTML = this.mouseTracker.sectorLabel;
 				document.getElementById("window").innerHTML = this.mouseTracker.windowId;
                 if (this.mouseTracker.moleculeData) {
-                    document.getElementById("complexity").innerHTML = this.mouseTracker.moleculeData.complexity;
-                    document.getElementById("loc").innerHTML = this.mouseTracker.moleculeData.LOC;
+                    var element;
+                    for (var p in this.mouseTracker.moleculeData) {
+                        element = document.getElementById(p);
+                        if (element) {
+                            element.innerHTML = this.mouseTracker.moleculeData[p];
+                        } else if (element != null) {
+                            element.innerHTML = "";
+                        }
+                    }
                 }
 			};
 
