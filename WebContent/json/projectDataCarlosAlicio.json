@@ -1,0 +1,5445 @@
+{
+  "period": {
+    "starts": "01/09/1998 00:00:00 +0000",
+    "ends": "07/09/1998 00:00:00 +0000"
+  },
+  "query": "this.LOC > 400 && this.complexity < 5",
+  "window": {
+    "size": 20,
+    "amount": 10,
+    "mode": "GLOBAL"
+  },
+  "sector": {
+    "label": "Acidentes Por Regiao"
+  },
+  "sectors": [
+    {
+      "angle": 0.20,
+      "label": "Nordeste",
+      "windows": [
+
+        {
+          "position": 1,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2011
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2011
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 4,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 5,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 6,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 7,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 8,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 9,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 10,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 1,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 4,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 5,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 6,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 7,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 8,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 9,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 10,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 1,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 4,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 5,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 6,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 7,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 8,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 9,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 10,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        }
+
+      ]
+    },
+    {
+      "angle": 0.20,
+      "label": "Norte",
+      "windows": [
+
+        {
+          "position": 1,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 4,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 5,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 6,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 7,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 8,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 9,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 10,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 1,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 4,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 5,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 6,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 7,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 8,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 9,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 10,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 1,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 4,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 5,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 6,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 7,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 8,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 9,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 10,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        }
+
+      ]
+    },
+    {
+      "angle": 0.20,
+      "label": "Centroeste",
+      "windows": [
+
+        {
+          "position": 1,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 4,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 5,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 6,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 7,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 8,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 9,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 10,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 1,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 4,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 5,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 6,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 7,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 8,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 9,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 10,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+
+          "position": 1,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 4,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 5,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 6,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 7,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 8,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 9,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 10,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        }
+
+
+      ]
+    },
+    {
+      "angle": 0.20,
+      "label": "Sudeste",
+      "windows": [
+
+        {
+          "position": 1,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1\",",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 4,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 5,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 6,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 7,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 8,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 9,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 10,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 1,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 4,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 5,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 6,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 7,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 8,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 9,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 10,
+          "molecules": [
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FF0000FF",
+              "data": {
+                "complexity": "2",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 1,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 4,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 5,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 6,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 7,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 8,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 9,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 10,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        }
+
+      ]
+    },
+    {
+      "angle": 0.20,
+      "label": "Sul",
+      "windows": [
+
+        {
+          "position": 1,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 4,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 5,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 6,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 7,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 8,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 9,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 10,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 1,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 4,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 5,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 6,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 7,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 8,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 9,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 10,
+          "molecules": [
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF0000",
+              "data": {
+                "complexity": "1",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 1,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 4,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 5,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 6,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 7,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 8,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        },
+        {
+          "position": 9,
+          "molecules": [
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            },
+            {
+              "color": "FFFF00FF",
+              "data": {
+                "complexity": "3",
+                "LOC": 2010
+              }
+            }
+          ]
+        }
+
+      ]
+    }
+  ]
+}
