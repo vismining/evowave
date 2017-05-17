@@ -462,7 +462,7 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 				this.updatePixels();
 
-				console.log('Drawing in ' + (Date.now() - execTime) + 'ms');
+				//console.log('Drawing in ' + (Date.now() - execTime) + 'ms');
 			};
 
 			this.loadFontInBuffer = function (buffer, font) {
@@ -1081,11 +1081,9 @@ var vismining = angular.module( 'vismining-evowave', [] );
 
 			this.showMoleculeInfo = function () {
 				document.getElementById("sector").innerHTML = this.mouseTracker.sectorLabel;
-				document.getElementById("window").innerHTML = this.mouseTracker.windowId;
-                if (this.mouseTracker.moleculeData) {
-                    document.getElementById("complexity").innerHTML = this.mouseTracker.moleculeData.complexity;
-                    document.getElementById("loc").innerHTML = this.mouseTracker.moleculeData.LOC;
-                }
+				document.getElementById("window").innerHTML = this.mouseTracker.windowId || '-';
+				document.getElementById("qtd_outran").innerHTML = this.mouseTracker.moleculeData ?  this.mouseTracker.moleculeData.qtd_outran : '-';
+				document.getElementById("qtd_salext").innerHTML = this.mouseTracker.moleculeData ? this.mouseTracker.moleculeData.qtd_salext : '-';
 			};
 
 			this.mouseMoved = function () {
