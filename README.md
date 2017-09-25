@@ -43,14 +43,14 @@ This is a mockup example, which has the following structure
     		a
 
     		b
-    		
+
             c
-    		
+
             d
-    		
-            	1
-    		
-            	2   	
+
+                1
+
+                2   	
 */
 Inside the "data" property there are two defined properties "complexity" and "LOC". 
 One can map any type/name of properties inside the "data" property.
