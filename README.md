@@ -1,7 +1,7 @@
 Evowave
 =======
 
-An open-source information visualization tool to portrays evolutionary data.
+An open-source information visualization tool to portray evolutionary data.
 
 In the website, http://vismining.github.io/evowave, you can see more information about this tool, 
 include examples of its usage in the context of software evolution visualization. 
@@ -35,14 +35,22 @@ This is a mockup example, which has the following structure
 
 /*
     Project
+
     	setor1
+
     	setor2
+
     		a
+
     		b
-    		c
-    		d
-    			1
-    			2   	
+    		
+            c
+    		
+            d
+    		
+            	1
+    		
+            	2   	
 */
 Inside the "data" property there are two defined properties "complexity" and "LOC". 
 One can map any type/name of properties inside the "data" property.
